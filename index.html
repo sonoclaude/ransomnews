@@ -1406,6 +1406,7 @@ const DATA_2026 = [{"P": "173", "ANNO": "1", "ID": "00173", "DATA": "02/01/2026"
 
 // ── Color palette for groups ─────────────────────
 const GP = {
+  exitium:      ['#ff3366','#2a0010'],
   akira:        ['#ff6b6b','#2d0a0a'],
   qilin:        ['#6cb4ff','#08192e'],
   lockbit:      ['#f0b429','#2a1d00'],
@@ -1531,6 +1532,7 @@ function populate() {
     if (r.GRUPPO) gSet.add(r.GRUPPO.toLowerCase());
   });
   ["Valle d'Aosta","Basilicata","Molise"].forEach(r => rSet.add(r));
+  ["exitium"].forEach(g => gSet.add(g));
   const rSel = document.getElementById('regioneFilter');
   const gSel = document.getElementById('gruppoFilter');
   const rv = rSel.value, gv = gSel.value;
