@@ -2236,7 +2236,7 @@ function populate() {
     if (String(r.GRUPPO).toLowerCase()) gSet.add(String(r.GRUPPO).toLowerCase().toLowerCase());
   });
   ["Valle d'Aosta","Basilicata","Molise"].forEach(r => rSet.add(r));
-  ["exitium","loki","nasirsecurity","bashe"].forEach(g => gSet.add(g));
+  ["exitium","loki","nasirsecurity","bashe","kyber"].forEach(g => gSet.add(g));
   const rSel = document.getElementById('regioneFilter');
   const gSel = document.getElementById('gruppoFilter');
   const rv = rSel.value, gv = gSel.value;
