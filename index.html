@@ -217,6 +217,11 @@ nav {
   min-width: 130px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 .stat::before {
   content: '';
@@ -235,17 +240,21 @@ nav {
   text-transform: none;
   color: var(--text-muted);
   margin-bottom: 8px;
+  text-align: center;
+  width: 100%;
 }
 .stat-val {
   font-family: var(--mono);
   font-size: 28px;
   font-weight: 700;
   line-height: 1;
+  text-align: center;
+  width: 100%;
 }
 .stat.red .stat-val { color: var(--red); }
 .stat.green .stat-val { color: var(--green); }
 .stat.blue .stat-val { color: var(--blue); }
-.stat.yellow .stat-val { color: var(--yellow); }
+.stat.yellow .stat-val { color: #ffffff; }
 .stat.purple::before { background: #c97aff; }
 .stat.purple .stat-val { color: #c97aff; }
 .stat-sub {
@@ -253,6 +262,8 @@ nav {
   color: var(--text-muted);
   margin-top: 4px;
   font-family: var(--mono);
+  text-align: center;
+  width: 100%;
 }
 
 /* ── YEAR PILLS ──────────────────────────── */
@@ -278,7 +289,7 @@ nav {
   justify-content: center;
 }
 .year-pill strong { color: var(--white); }
-.year-pill span { color: var(--yellow); }
+.year-pill span { color: #ffffff; }
 
 /* ── TOOLBAR ──────────────────────────────── */
 .toolbar {
@@ -479,7 +490,7 @@ td {
 }
 .dati-large { color: var(--red2); font-weight: 700; }
 .dati-mid { color: #f08c2e; font-weight: 700; }
-.dati-low { color: var(--yellow); }
+.dati-low { color: #ffffff; }
 .dati-zero { color: var(--text-dim); }
 .dati-empty { color: var(--text-dim); }
 .c-note { max-width: 150px; }
@@ -1870,6 +1881,220 @@ html.light .hm-btn { color: #7a82b0; }
   font-weight: 400 !important;
 }
 
+
+/* === FIX: box TOTALI GRUPPI visibile e coerente con gli stat superiori === */
+.toolbar-total-groups{
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 20px;
+  width: 206px;
+  min-height: 146px;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--mono);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+.toolbar-total-groups::before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--yellow);
+}
+.hero-total-groups-wrap{
+  width: 100%;
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+.ttg-label{
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.2;
+  text-align: center;
+  width: 100%;
+}
+.ttg-value{
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  letter-spacing: 0;
+  text-align: center;
+  width: 100%;
+}
+@media (max-width: 1100px){
+  .hero-total-groups-wrap{
+    justify-content: flex-start;
+  }
+}
+
+
+/* AUTO: uppercase stat labels */
+.stat-label { text-transform: uppercase; }
+
+
+/* === FIX finale: box Totali Gruppi con stesse dimensioni dei box superiori === */
+.hero-total-groups-wrap{
+  width: 100%;
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+.toolbar-total-groups{
+  width: calc((100% - 32px) / 5) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  gap: 8px !important;
+}
+@media (max-width: 1200px){
+  .toolbar-total-groups{
+    width: calc((100% - 8px) / 2) !important;
+  }
+}
+@media (max-width: 1100px){
+  .hero-total-groups-wrap{
+    justify-content: flex-start;
+  }
+  .toolbar-total-groups{
+    width: calc((100% - 8px) / 2) !important;
+  }
+}
+
+
+/* === FIX: Totali Gruppi allineato con i box superiori === */
+.hero-right-stats .stats-row{
+  grid-template-columns: repeat(6, minmax(0,1fr)) !important;
+}
+.hero-right-stats .stat.total-groups-stat{
+  min-width: 0 !important;
+}
+.hero-right-stats .stat.total-groups-stat .stat-val{
+  color: #ffffff !important;
+}
+.hero-right-stats .stat.total-groups-stat .stat-sub{
+  visibility: hidden;
+}
+@media (max-width: 1600px){
+  .hero-right-stats .stats-row{
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  }
+}
+@media (max-width: 1200px){
+  .hero-right-stats .stats-row{
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  }
+}
+
+
+
+/* === FIX: linea identica agli altri box === */
+.hero-right-stats .stat.total-groups-stat::before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 3px;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.hero-right-stats .stat.total-groups-stat::before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ffffff;
+}
+.hero-right-stats .stat.total-groups-stat{
+  position: relative;
+}
+
+
+/* === FIX: ripristino colore originale numero DATI PUBBLICATI dalla versione stabile === */
+.hero-right-stats .stat.yellow .stat-val{
+  color: var(--yellow) !important;
+}
+
+
+/* === TEST UI POLISH: micro-rifiniture dai suggerimenti proposti === */
+.hero-right-stats .stat{
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.14);
+}
+.hero-right-stats .stat:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+  border-color: rgba(255,255,255,0.10);
+}
+.hero-right-stats .stat-label{
+  letter-spacing: 0.14em !important;
+  margin-bottom: 10px !important;
+}
+.hero-right-stats .stat-val{
+  margin-bottom: 2px;
+}
+.hero-right-stats .stat-sub{
+  margin-top: 6px !important;
+}
+.hero-right-stats .stats-row{
+  align-items: stretch;
+}
+.hero-right-stats .stat{
+  min-height: 148px;
+}
+.hero-right-stats .year-pill{
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+.hero-right-stats .year-pill:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.045);
+}
+@media (max-width: 1600px){
+  .hero-right-stats .stat{
+    min-height: 142px;
+  }
+}
+@media (max-width: 1200px){
+  .hero-right-stats .stat{
+    min-height: 132px;
+  }
+}
+
+
+/* === FIX: ripristino dimensioni originali box === */
+.hero-right-stats .stat{
+  min-height: auto !important;
+  padding: 14px 18px !important;
+}
+.hero-right-stats .stat-label{
+  margin-bottom: 6px !important;
+}
+.hero-right-stats .stat-val{
+  font-size: 28px !important;
+}
+
 </style>
 </head>
 <body>
@@ -1931,31 +2156,34 @@ html.light .hm-btn { color: #7a82b0; }
       </div><!-- /hero-text -->
     </div>
     <div class="hero-right hero-right-stats">
-
-
       <div class="stats-row">
+        <div class="stat total-groups-stat">
+          <div class="stat-label">TOTALI GRUPPI</div>
+          <div class="stat-val" id="toolbarTotalGroupsValue">0</div>
+          <div class="stat-sub">&nbsp;</div>
+        </div>
         <div class="stat red">
-          <div class="stat-label">Tot. Rivendicazioni</div>
+          <div class="stat-label">RIVENDICAZIONI</div>
           <div class="stat-val" id="statTot">—</div>
           <div class="stat-sub">2024 – 2026</div>
         </div>
         <div class="stat yellow">
-          <div class="stat-label">Dati Pubblicati</div>
+          <div class="stat-label">DATI PUBBLICATI</div>
           <div class="stat-val" id="statGb">—</div>
           <div class="stat-sub">GB totali</div>
         </div>
         <div class="stat purple">
-          <div class="stat-label">Anno 2024</div>
+          <div class="stat-label">ANNO 2024</div>
           <div class="stat-val" id="stat2024">—</div>
           <div class="stat-sub" id="stat2024gb">—</div>
         </div>
         <div class="stat blue">
-          <div class="stat-label">Anno 2025</div>
+          <div class="stat-label">ANNO 2025</div>
           <div class="stat-val" id="stat2025">—</div>
           <div class="stat-sub" id="stat2025gb">—</div>
         </div>
         <div class="stat green">
-          <div class="stat-label">Anno 2026</div>
+          <div class="stat-label">ANNO 2026</div>
           <div class="stat-val" id="stat2026">—</div>
           <div class="stat-sub" id="stat2026gb">—</div>
         </div>
@@ -1967,7 +2195,11 @@ html.light .hm-btn { color: #7a82b0; }
         <div class="year-pill"><strong>2026</strong> <span id="pill2026">—</span></div>
       </div>
 
+    </div>
+
       </div>
+
+  </div>
 
   </div>
 </div>
@@ -2027,7 +2259,7 @@ html.light .hm-btn { color: #7a82b0; }
     <input type="text" id="searchInput" placeholder="Cerca vittima, gruppo, regione…">
   </div>
   <select id="regioneFilter"><option value="">Tutte le regioni</option></select>
-  <select id="gruppoFilter">  <option value="">Tutti i gruppi</option></select>
+    <select id="gruppoFilter">  <option value="">Tutti i gruppi</option></select>
   <button id="toolbarResetBtn" onclick="resetToolbar()" style="display:none;font-size:13px;color:var(--red);background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.35);border-radius:6px;padding:8px 14px;cursor:pointer;letter-spacing:0.04em;white-space:nowrap;" onmouseover="this.style.background='rgba(230,57,70,0.2)'" onmouseout="this.style.background='rgba(230,57,70,0.1)'">✕ reset filtro</button>
   <button id="hmResetBtn" onclick="resetHmFilter()" style="display:none;font-family:var(--mono);font-size: 13px;color:var(--red);background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.35);border-radius:3px;padding:8px 12px;cursor:pointer;letter-spacing:0.04em;" onmouseover="this.style.background='rgba(230,57,70,0.2)'" onmouseout="this.style.background='rgba(230,57,70,0.1)'" title="Rimuovi filtro e torna alla vista completa">✕ reset filtro</button>
   <div class="count-info">Visualizzate <strong id="countNum">—</strong> righe</div>
@@ -2307,13 +2539,26 @@ function renderTablePager(totalPages) {
 function goTablePage(p) {
   currentPage = p;
   render();
-  // scroll alla tabella
+  updateToolbarTotalGroups();
   const tableEl = document.getElementById('mainTable');
   if (tableEl) {
     const top = tableEl.getBoundingClientRect().top + window.scrollY - 130;
     window.scrollTo({ top, behavior: 'smooth' });
   }
 }
+
+function updateToolbarTotalGroups() {
+  const groups = new Set();
+  all.forEach(r => {
+    const g = String(r.GRUPPO || '').trim().toLowerCase();
+    if (g) groups.add(g);
+  });
+  ["exitium","loki","nasirsecurity","bashe","kyber"].forEach(g => groups.add(g));
+  const el = document.getElementById('toolbarTotalGroupsValue');
+  if (el) el.textContent = groups.size;
+}
+
+updateToolbarTotalGroups();
 
 function sort(k) {
   sortDir = sortKey === k ? sortDir * -1 : 1;
@@ -2341,6 +2586,7 @@ document.getElementById('gruppoFilter').addEventListener('change', () => { curre
 
 populate();
 render();
+updateToolbarTotalGroups();
 const fv = document.getElementById('footerVersion'); if (fv) fv.textContent = VERSION_LABEL;
 buildStats();
 
