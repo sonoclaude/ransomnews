@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ransomNews · Rivendicazioni Italia 2024–2026</title>
+<title>ransomNews · Rivendicazioni Italia</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1932,7 +1932,7 @@ html.light .hm-btn { color: #7a82b0; }
 }
 
 
-/* === FIX: ripristino colore originale numero DATI PUBBLICATI dalla versione stabile === */
+/* === FIX: ripristino colore originale numero DATI PUBBLICATI IN GB dalla versione stabile === */
 .hero-right-stats .stat.yellow .stat-val{
   color: var(--yellow) !important;
 }
@@ -1961,6 +1961,50 @@ html.light .hm-btn { color: #7a82b0; }
 
 
 /* === CLEANUP: CSS consolidato senza cambiare la logica applicativa === */
+
+.stat-box {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center;
+}
+
+
+/* === FIX: centratura reale contenuto box KPI === */
+.hero-right-stats .stat{
+  min-height: 138px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 8px !important;
+}
+.hero-right-stats .stat-label{
+  margin: 0 !important;
+  line-height: 1.1 !important;
+}
+.hero-right-stats .stat-val{
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+.hero-right-stats .stat-sub{
+  margin: 0 !important;
+  min-height: 0 !important;
+  line-height: 1 !important;
+}
+.hero-right-stats .stat-sub:empty{
+  display: none !important;
+}
+
+
+/* === FIX: riduzione altezza box KPI === */
+.hero-right-stats .stat{
+  min-height: 105px !important;
+  padding: 14px 18px !important;
+}
+
 </style>
 </head>
 <body>
@@ -2026,32 +2070,32 @@ html.light .hm-btn { color: #7a82b0; }
         <div class="stat total-groups-stat">
           <div class="stat-label">GRUPPI</div>
           <div class="stat-val" id="toolbarTotalGroupsValue">0</div>
-          <div class="stat-sub">&nbsp;</div>
+          <div class="stat-sub"></div>
         </div>
         <div class="stat red">
           <div class="stat-label">RIVENDICAZIONI</div>
           <div class="stat-val" id="statTot">—</div>
-          <div class="stat-sub">2024 – 2026</div>
+          <div class="stat-sub"></div>
         </div>
         <div class="stat yellow">
-          <div class="stat-label">DATI PUBBLICATI</div>
+          <div class="stat-label">DATI PUBBLICATI IN GB</div>
           <div class="stat-val" id="statGb">—</div>
-          <div class="stat-sub">GB TOTALI</div>
+          <div class="stat-sub"></div>
         </div>
         <div class="stat purple">
           <div class="stat-label">ANNO 2024</div>
           <div class="stat-val" id="stat2024">—</div>
-          <div class="stat-sub" id="stat2024gb">—</div>
+          <div class="stat-sub" id="stat2024gb"></div>
         </div>
         <div class="stat blue">
           <div class="stat-label">ANNO 2025</div>
           <div class="stat-val" id="stat2025">—</div>
-          <div class="stat-sub" id="stat2025gb">—</div>
+          <div class="stat-sub" id="stat2025gb"></div>
         </div>
         <div class="stat green">
           <div class="stat-label">ANNO 2026</div>
           <div class="stat-val" id="stat2026">—</div>
-          <div class="stat-sub" id="stat2026gb">—</div>
+          <div class="stat-sub" id="stat2026gb"></div>
         </div>
       </div>
 
@@ -2076,21 +2120,21 @@ html.light .hm-btn { color: #7a82b0; }
   <div class="top-grid">
       <div class="chart-box">
         <div class="chart-title chart-title-v2">
-          <div class="chart-title-sub">RIVENDICAZIONI · 2024–2026</div>
+          <div class="chart-title-sub">RIVENDICAZIONI ·</div>
           <div class="chart-title-label">TOP 5 GRUPPI</div>
         </div>
         <div id="top5chart"></div>
       </div>
       <div class="chart-box">
         <div class="chart-title chart-title-v2">
-          <div class="chart-title-sub">RIVENDICAZIONI · 2024–2026</div>
+          <div class="chart-title-sub">RIVENDICAZIONI ·</div>
           <div class="chart-title-label">TOP 5 REGIONI</div>
         </div>
         <div id="top5regioni"></div>
       </div>
       <div class="chart-box">
         <div class="chart-title chart-title-v2">
-          <div class="chart-title-sub">RIVENDICAZIONI · 2024–2026</div>
+          <div class="chart-title-sub">RIVENDICAZIONI ·</div>
           <div class="chart-title-label">GEOGRAFICA</div>
         </div>
         <div id="geoDivisionBox"></div>
@@ -2176,7 +2220,7 @@ html.light .hm-btn { color: #7a82b0; }
   <div class="heatmap-header">
     <div class="heatmap-title-block">
       <span class="heatmap-title-label">Rivendicazioni per Mese</span>
-      <span class="heatmap-title-sub">distribuzione mensile · 2024–2026</span>
+      <span class="heatmap-title-sub">distribuzione mensile ·</span>
     </div>
     <div class="heatmap-toggle">
       <button class="hm-btn active" id="hmBtnGruppo" onclick="switchHeatmap('gruppo')">Per Gruppo</button>
@@ -3144,11 +3188,11 @@ function buildStats() {
   document.getElementById('statTot').textContent = fmtInt(tot);
   document.getElementById('statGb').textContent = fmt(gbTot).replace(/,\d+$/, '');
   document.getElementById('stat2024').textContent = DATA_2024.length;
-  document.getElementById('stat2024gb').textContent = fmt(gb24) + ' GB';
+  document.getElementById('stat2024gb').textContent = '';
   document.getElementById('stat2025').textContent = DATA_2025.length;
-  document.getElementById('stat2025gb').textContent = fmt(gb25) + ' GB';
+  document.getElementById('stat2025gb').textContent = '';
   document.getElementById('stat2026').textContent = DATA_2026.length;
-  document.getElementById('stat2026gb').textContent = fmt(gb26) + ' GB';
+  document.getElementById('stat2026gb').textContent = '';
   document.getElementById('pill2024').innerHTML = DATA_2024.length + ' vittime &nbsp;·&nbsp; ' + fmt(gb24) + ' GB';
   document.getElementById('pill2025').innerHTML = DATA_2025.length + ' vittime &nbsp;·&nbsp; ' + fmt(gb25) + ' GB';
   document.getElementById('pill2026').innerHTML = DATA_2026.length + ' vittime &nbsp;·&nbsp; ' + fmt(gb26) + ' GB';
@@ -3185,7 +3229,7 @@ document.addEventListener('DOMContentLoaded', () => { try { renderGroupCatalogWa
     </div>
 
     <div class="footer-right">
-      <span>Statistiche Italia 2024–2026</span>
+      <span>Statistiche Italia</span>
       <span class="dot">·</span>
       <span id="footer-date"></span><span class="dot">·</span><span id="footer-version"></span>
     </div>
