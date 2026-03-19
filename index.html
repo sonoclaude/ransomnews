@@ -2955,9 +2955,15 @@ function buildHeatmap() {
         <div class="hm-spark-track"><div class="hm-spark" style="width:${pct}%"></div></div>
       </div></td>`;
     }).join('');
+    const totalPct = rows.length > 0 && rows[0].total > 0 ? Math.round((total / rows[0].total) * 100) : 0;
     return `<tr>
       <td class="hm-row-label">${label}</td>
-      <td class="hm-total-col hm-clickable" style="cursor:pointer;border-right:1px solid var(--border)" onclick="applyHmFilterTotal('${label}')" title="Vedi tutte le rivendicazioni">${total}</td>
+      <td class="hm-total-col" style="border-right:1px solid var(--border)">
+        <div class="hm-cell nonzero hm-clickable" style="width:100%;height:40px;" onclick="applyHmFilterTotal('${label}')" title="Vedi tutte le rivendicazioni">
+          <span class="hm-num">${total}</span>
+          <div class="hm-spark-track"><div class="hm-spark" style="width:${totalPct}%"></div></div>
+        </div>
+      </td>
       ${cells}
     </tr>`;
   }).join('');
