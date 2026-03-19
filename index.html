@@ -2037,64 +2037,9 @@ html.light .hm-btn { color: #7a82b0; }
 }
 
 
-/* === TEST UI POLISH: micro-rifiniture dai suggerimenti proposti === */
-.hero-right-stats .stat{
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.14);
-}
-.hero-right-stats .stat:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.22);
-  border-color: rgba(255,255,255,0.10);
-}
-.hero-right-stats .stat-label{
-  letter-spacing: 0.14em !important;
-  margin-bottom: 10px !important;
-}
-.hero-right-stats .stat-val{
-  margin-bottom: 2px;
-}
-.hero-right-stats .stat-sub{
-  margin-top: 6px !important;
-}
-.hero-right-stats .stats-row{
-  align-items: stretch;
-}
-.hero-right-stats .stat{
-  min-height: 148px;
-}
-.hero-right-stats .year-pill{
-  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
-}
-.hero-right-stats .year-pill:hover{
-  transform: translateY(-1px);
-  border-color: rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.045);
-}
-@media (max-width: 1600px){
-  .hero-right-stats .stat{
-    min-height: 142px;
-  }
-}
-@media (max-width: 1200px){
-  .hero-right-stats .stat{
-    min-height: 132px;
-  }
-}
+/* TEST: catalogo gruppi coerente tra filtro e totale */
 
-
-/* === FIX: ripristino dimensioni originali box === */
-.hero-right-stats .stat{
-  min-height: auto !important;
-  padding: 14px 18px !important;
-}
-.hero-right-stats .stat-label{
-  margin-bottom: 6px !important;
-}
-.hero-right-stats .stat-val{
-  font-size: 28px !important;
-}
-
+/* TEST: catalogo ufficiale gruppi a 88, usato per filtro e totale */
 </style>
 </head>
 <body>
@@ -2453,8 +2398,107 @@ const YEARS = Object.keys(DATASETS).map(Number).sort((a,b) => b-a);
 let all = YEARS.slice().sort((a,b) => a-b).flatMap(y => DATASETS[y]);
 all.forEach((r,i) => { r.SEQ = String(i+1).padStart(5,'0'); });
 
+const OFFICIAL_GROUP_CATALOG = [
+  "abyss",
+  "ailock",
+  "akira",
+  "anubis",
+  "atomsilo",
+  "bashe",
+  "beast",
+  "benzona",
+  "blackshrantac",
+  "bqtlock",
+  "braincipher",
+  "bravox",
+  "brotherhood",
+  "chaos",
+  "ciphbit",
+  "cipherforce",
+  "cl0p",
+  "cloak",
+  "coinbasecartel",
+  "crypto24",
+  "datacarry",
+  "devman",
+  "direwolf",
+  "dragonforce",
+  "embargo",
+  "everest",
+  "exitium",
+  "genesis",
+  "gunra",
+  "incransom",
+  "interlock",
+  "insomnia",
+  "j group",
+  "kairos",
+  "kazu",
+  "killsec",
+  "kittykatkrew",
+  "kraken",
+  "kryptos",
+  "kiber",
+  "leakeddata",
+  "linkc",
+  "lockbit5",
+  "loki",
+  "lynx",
+  "medusa",
+  "meduza locker",
+  "metaencryptor",
+  "minteye",
+  "moneymessage",
+  "morpheus",
+  "ms13-089",
+  "mydata",
+  "nasir security",
+  "nightspire",
+  "nitrogen",
+  "nova",
+  "obscura",
+  "osiris",
+  "payload",
+  "payoutsking",
+  "pear",
+  "play",
+  "qilin",
+  "radar",
+  "ransomhouse",
+  "reynolds",
+  "rhysida",
+  "safepay",
+  "sarcoma",
+  "shadowbyt3$",
+  "shinyhunters",
+  "sicari knife",
+  "sinobi",
+  "skira",
+  "spacebears",
+  "stormous",
+  "tengu",
+  "termite",
+  "thegentlemen",
+  "thegreenblood",
+  "threeam",
+  "tridentlocker",
+  "vect",
+  "walocker",
+  "warlock",
+  "worldleaks",
+  "xp95"
+];
+
 let year = 0, sortKey = 'SEQ', sortDir = -1;
 let hmMonth = null, hmGroup = null, hmRegione = null;
+
+function normalizeGroupName(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getAllGroupsCatalog() {
+  return [...OFFICIAL_GROUP_CATALOG].sort((a, b) => a.localeCompare(b, 'it'));
+}
 
 function base() {
   if (year === 0) return all;
@@ -2462,21 +2506,26 @@ function base() {
 }
 
 function populate() {
-  const rSet = new Set(), gSet = new Set();
+  const rSet = new Set();
   all.forEach(r => {
     if (r.REGIONE && r.REGIONE !== 'Sconosciuta') rSet.add(r.REGIONE);
-    if (String(r.GRUPPO).toLowerCase()) gSet.add(String(r.GRUPPO).toLowerCase().toLowerCase());
   });
   ["Valle d'Aosta","Basilicata","Molise"].forEach(r => rSet.add(r));
-  ["exitium","loki","nasirsecurity","bashe","kyber"].forEach(g => gSet.add(g));
+
+  const groupCatalog = getAllGroupsCatalog();
+
   const rSel = document.getElementById('regioneFilter');
   const gSel = document.getElementById('gruppoFilter');
   const rv = rSel.value, gv = gSel.value;
+
   rSel.innerHTML = '<option value="">Tutte le regioni</option>' +
     [...rSet].sort().map(x=>`<option>${x}</option>`).join('');
+
   gSel.innerHTML = '<option value="">Tutti i gruppi</option>' +
-    [...gSet].sort().map(x=>`<option value="${x}">${x}</option>`).join('');
-  rSel.value = rv; gSel.value = gv;
+    groupCatalog.map(x=>`<option value="${x}">${x}</option>`).join('');
+
+  rSel.value = rv;
+  gSel.value = groupCatalog.includes(gv) ? gv : '';
 }
 
 const PAGE_SIZE = 25;
@@ -2490,15 +2539,15 @@ function render() {
 
   filteredRows = base().filter(r => {
     if (re && r.REGIONE !== re) return false;
-    if (gr && String(r.GRUPPO).toLowerCase().toLowerCase() !== gr) return false;
+    if (gr && normalizeGroupName(r.GRUPPO) !== gr) return false;
     if (hmMonth !== null) {
       const p = r.DATA.split('/');
       if (parseInt(p[1]) !== hmMonth) return false;
-      if (hmGroup && String(r.GRUPPO).toLowerCase().toLowerCase() !== hmGroup) return false;
+      if (hmGroup && normalizeGroupName(r.GRUPPO) !== hmGroup) return false;
       if (hmRegione && r.REGIONE !== hmRegione) return false;
     }
     if (q) {
-      const hay = [r.VITTIMA,String(r.GRUPPO).toLowerCase(),r.PROVINCIA,r.REGIONE,r.LINK,r.NOTE,r.SEQ].join(' ').toLowerCase();
+      const hay = [r.VITTIMA, normalizeGroupName(r.GRUPPO), r.PROVINCIA, r.REGIONE, r.LINK, r.NOTE, r.SEQ].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -2548,14 +2597,8 @@ function goTablePage(p) {
 }
 
 function updateToolbarTotalGroups() {
-  const groups = new Set();
-  all.forEach(r => {
-    const g = String(r.GRUPPO || '').trim().toLowerCase();
-    if (g) groups.add(g);
-  });
-  ["exitium","loki","nasirsecurity","bashe","kyber"].forEach(g => groups.add(g));
   const el = document.getElementById('toolbarTotalGroupsValue');
-  if (el) el.textContent = groups.size;
+  if (el) el.textContent = getAllGroupsCatalog().length;
 }
 
 updateToolbarTotalGroups();
