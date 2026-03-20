@@ -3211,7 +3211,7 @@ function buildStats() {
   const gbTot = gb24 + gb25 + gb26;
 
   const fmt = n => n.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
-  const fmtInt = n => n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtInt = n => n.toLocaleString('it-IT');
 
   document.getElementById('statTot').textContent = fmtInt(tot);
   document.getElementById('statGb').textContent = fmt(gbTot);
