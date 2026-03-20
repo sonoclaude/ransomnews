@@ -227,7 +227,7 @@ nav {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 3px;
+  height: 2px;
 }
 .stat.red::before { background: var(--red); }
 .stat.green::before { background: var(--green); }
@@ -1113,7 +1113,7 @@ html.light .hm-btn { color: #7a82b0; }
     background: var(--red);
     opacity: 0.75;
     transition: opacity 0.2s, filter 0.2s;
-    min-height: 3px;
+    min-height: 2px;
   }
   .trend-val {
     font-size: 13px;
@@ -1924,10 +1924,9 @@ html.light .hm-btn { color: #7a82b0; }
   content: '';
   position: absolute;
   top: 0;
-  left: 8px;
-  right: 8px;
-  height: 3px;
-  border-radius: 2px;
+  left: 0;
+  right: 0;
+  height: 2px;
   background: #ffffff;
 }
 
@@ -2003,6 +2002,29 @@ html.light .hm-btn { color: #7a82b0; }
 .hero-right-stats .stat{
   min-height: 105px !important;
   padding: 14px 18px !important;
+}
+
+
+/* === TEST OVERRIDE: linea box GRUPPI con stessa geometria delle altre === */
+.hero-right-stats .stat.total-groups-stat::before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ffffff;
+}
+
+
+/* === TEST V3: linea box GRUPPI identica alle altre, cambia solo il colore === */
+.hero-right-stats .stat.total-groups-stat::before{
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
 }
 
 </style>
