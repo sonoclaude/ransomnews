@@ -443,16 +443,17 @@ footer a { color: var(--text-dim); text-decoration: none; }
 footer a:hover { color: var(--green); }
 
 /* ── LANG TOGGLE ── */
-.lang-it, .lang-en { display: none; }
-body.lang-it .lang-it { display: contents; }
-body.lang-en .lang-en { display: contents; }
-/* block-level overrides */
-body.lang-it .lang-it.block,
-body.lang-en .lang-en.block { display: block; }
-body.lang-it .lang-it.flex,
-body.lang-en .lang-en.flex { display: flex; }
-body.lang-it .lang-it.grid,
-body.lang-en .lang-en.grid { display: grid; }
+[class="lang-it"], [class="lang-en"] { display: none; }
+body.lang-it .lang-it,
+body.lang-en .lang-en { display: inline; }
+/* Hero spans need block */
+.hero h1 .lang-it, .hero h1 .lang-en { display: block; }
+.hero-desc .lang-it, .hero-desc .lang-en { display: block; }
+.hero-meta .lang-it, .hero-meta .lang-en { display: inline; }
+.section-title .lang-it, .section-title .lang-en { display: inline; }
+.endpoint-desc .lang-it, .endpoint-desc .lang-en { display: inline; }
+.endpoint-body p .lang-it, .endpoint-body p .lang-en { display: inline; }
+footer .lang-it, footer .lang-en { display: inline; }
 </style>
 </head>
 <body class="lang-it">
