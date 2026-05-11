@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ransomNews API — Documentazione</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #1a1b2e;
+  --surface:   #20223a;
+  --surface2:  #272a45;
+  --surface3:  #2e3150;
+  --border:    #363a5e;
+  --border2:   #404470;
+  --red:       #ff0000;
+  --red-dim:   rgba(255,0,0,0.12);
+  --white:     #f0f0f5;
+  --text:      #dde1f5;
+  --text-dim:  #9099c8;
+  --text-muted:#5a6090;
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Inter', sans-serif;
+  --green:     #00c896;
+  --blue:      #4d9fff;
+  --yellow:    #f5c842;
+  --purple:    #a78bfa;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ── NAVBAR ── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 28px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.nav-logo .dot { color: var(--red); }
+
+.nav-sep { width: 1px; height: 20px; background: var(--border2); }
+
+.nav-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  background: rgba(0,200,150,0.1);
+  border: 1px solid rgba(0,200,150,0.25);
+  border-radius: 6px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.lang-btn.active {
+  color: var(--white);
+  background: var(--surface3);
+  border-color: var(--border2);
+}
+.lang-btn:hover:not(.active) {
+  color: var(--green);
+  border-color: rgba(0,200,150,0.3);
+}
+
+.nav-home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: all 0.18s;
+}
+.nav-home:hover { color: var(--white); background: var(--surface2); border-color: var(--border); }
+.nav-home svg { width: 18px; height: 18px; }
+
+/* ── LAYOUT ── */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── HERO ── */
+.hero {
+  margin-bottom: 52px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+.hero h1 .accent { color: var(--red); }
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--text-dim);
+  max-width: 640px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.meta-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.meta-dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.meta-dot.blue  { background: var(--blue); }
+.meta-dot.yellow{ background: var(--yellow); }
+
+/* ── BASE URL BOX ── */
+.base-url-box {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--green);
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-bottom: 48px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.base-url-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.base-url-val {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--white);
+  word-break: break-all;
+}
+
+/* ── SECTIONS ── */
+.section { margin-bottom: 52px; }
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-family: var(--mono);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── ENDPOINT CARD ── */
+.endpoint {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.endpoint-header:hover { background: var(--surface2); }
+
+.method {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: rgba(0,200,150,0.12);
+  color: var(--green);
+  border: 1px solid rgba(0,200,150,0.25);
+  flex-shrink: 0;
+}
+
+.endpoint-path {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--white);
+  font-weight: 500;
+  flex: 1;
+}
+
+.endpoint-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  display: none;
+}
+@media (min-width: 600px) { .endpoint-desc { display: block; } }
+
+.endpoint-chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.endpoint.open .endpoint-chevron { transform: rotate(180deg); }
+
+.endpoint-body {
+  display: none;
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--border);
+}
+.endpoint.open .endpoint-body { display: block; }
+
+.endpoint-body p {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin: 16px 0 14px;
+  line-height: 1.6;
+}
+
+/* ── FIELDS TABLE ── */
+.fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 14px 0;
+}
+.fields-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.fields-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(54,58,94,0.5);
+  vertical-align: top;
+}
+.fields-table tr:last-child td { border-bottom: none; }
+.field-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--blue);
+  font-weight: 500;
+}
+.field-type {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--yellow);
+}
+.field-desc { color: var(--text-dim); font-size: 13px; }
+
+/* ── CODE BLOCK ── */
+.code-block {
+  background: #0f1020;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin: 14px 0 0;
+  overflow-x: auto;
+  position: relative;
+}
+.code-block pre {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre;
+}
+.code-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* JSON syntax highlight */
+.j-key   { color: #7dd3fc; }
+.j-str   { color: #86efac; }
+.j-num   { color: #fbbf24; }
+.j-bool  { color: #a78bfa; }
+.j-null  { color: #9099c8; }
+.j-punc  { color: #5a6090; }
+
+/* ── NOTE BOX ── */
+.note-box {
+  background: rgba(77,159,255,0.07);
+  border: 1px solid rgba(77,159,255,0.2);
+  border-left: 3px solid var(--blue);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 16px 0 0;
+  line-height: 1.6;
+}
+.note-box strong { color: var(--blue); font-weight: 600; }
+
+.warn-box {
+  background: rgba(245,200,66,0.07);
+  border: 1px solid rgba(245,200,66,0.2);
+  border-left: 3px solid var(--yellow);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 16px 0 0;
+  line-height: 1.6;
+}
+.warn-box strong { color: var(--yellow); font-weight: 600; }
+
+/* ── STATS GRID ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 48px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+.stat-val {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-val.green { color: var(--green); }
+.stat-val.blue  { color: var(--blue); }
+.stat-val.red   { color: var(--red); }
+.stat-val.yellow{ color: var(--yellow); }
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 24px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+footer a { color: var(--text-dim); text-decoration: none; }
+footer a:hover { color: var(--green); }
+
+/* ── LANG TOGGLE ── */
+.lang-it, .lang-en { display: none; }
+body.lang-it .lang-it { display: contents; }
+body.lang-en .lang-en { display: contents; }
+/* block-level overrides */
+body.lang-it .lang-it.block,
+body.lang-en .lang-en.block { display: block; }
+body.lang-it .lang-it.flex,
+body.lang-en .lang-en.flex { display: flex; }
+body.lang-it .lang-it.grid,
+body.lang-en .lang-en.grid { display: grid; }
+</style>
+</head>
+<body class="lang-it">
+
+<!-- NAVBAR -->
+<nav>
+  <a href="index.html" class="nav-logo">ransom<span class="dot">News</span></a>
+  <div class="nav-sep"></div>
+  <span class="nav-badge">API v1</span>
+  <div class="nav-right">
+    <button class="lang-btn active" id="btnIT" onclick="setLang('it')">IT</button>
+    <button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button>
+    <div class="nav-sep"></div>
+    <a href="index.html" class="nav-home" title="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    </a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">ransomNews · Public API</div>
+    <h1>
+      <span class="lang-it">Dati ransomware<br><span class="accent">italiani</span>, in formato aperto</span>
+      <span class="lang-en">Italian ransomware data,<br><span class="accent">open format</span></span>
+    </h1>
+    <p class="hero-desc">
+      <span class="lang-it">Le API di ransomNews espongono in formato JSON i dati raccolti e verificati manualmente sulle rivendicazioni ransomware contro organizzazioni italiane, a partire dall'ottobre 2020. Accesso libero, nessuna autenticazione richiesta.</span>
+      <span class="lang-en">The ransomNews API exposes in JSON format the manually collected and verified data on ransomware claims against Italian organizations, starting from October 2020. Open access, no authentication required.</span>
+    </p>
+    <div class="hero-meta">
+      <div class="meta-item"><div class="meta-dot green"></div><span class="lang-it">Endpoint attivi</span><span class="lang-en">Live endpoints</span></div>
+      <div class="meta-item"><div class="meta-dot blue"></div><span class="lang-it">Aggiornamento automatico</span><span class="lang-en">Auto-updated</span></div>
+      <div class="meta-item"><div class="meta-dot yellow"></div><span class="lang-it">Nessuna autenticazione</span><span class="lang-en">No authentication</span></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val green">751</div>
+      <div class="stat-label"><span class="lang-it">Rivendicazioni</span><span class="lang-en">Claims</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val blue">167</div>
+      <div class="stat-label"><span class="lang-it">Gruppi a catalogo</span><span class="lang-en">Groups catalogued</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val yellow">65.484</div>
+      <div class="stat-label"><span class="lang-it">GB pubblicati</span><span class="lang-en">GB published</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val red">2020–2026</div>
+      <div class="stat-label"><span class="lang-it">Copertura temporale</span><span class="lang-en">Time coverage</span></div>
+    </div>
+  </div>
+
+  <!-- BASE URL -->
+  <div class="base-url-box">
+    <span class="base-url-label">Base URL</span>
+    <span class="base-url-val">https://ransomnews.online/api/v1/</span>
+  </div>
+
+  <!-- ENDPOINTS -->
+  <div class="section">
+    <div class="section-title"><span class="lang-it">Endpoint disponibili</span><span class="lang-en">Available endpoints</span></div>
+
+    <!-- rivendicazioni.json -->
+    <div class="endpoint" id="ep1">
+      <div class="endpoint-header" onclick="toggleEp('ep1')">
+        <span class="method">GET</span>
+        <span class="endpoint-path">rivendicazioni.json</span>
+        <span class="endpoint-desc"><span class="lang-it">Tutti i record</span><span class="lang-en">All records</span></span>
+        <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="endpoint-body">
+        <p>
+          <span class="lang-it">Restituisce l'elenco completo di tutte le rivendicazioni ransomware verificate, dal 2020 ad oggi.</span>
+          <span class="lang-en">Returns the complete list of all verified ransomware claims, from 2020 to date.</span>
+        </p>
+        <div class="code-label">URL</div>
+        <div class="code-block"><pre>https://ransomnews.online/api/v1/rivendicazioni.json</pre></div>
+        <br>
+        <table class="fields-table">
+          <thead><tr><th><span class="lang-it">Campo</span><span class="lang-en">Field</span></th><th><span class="lang-it">Tipo</span><span class="lang-en">Type</span></th><th><span class="lang-it">Descrizione</span><span class="lang-en">Description</span></th></tr></thead>
+          <tbody>
+            <tr><td class="field-name">id</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Identificatore univoco progressivo</span><span class="lang-en">Unique progressive identifier</span></td></tr>
+            <tr><td class="field-name">data</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Data rivendicazione (dd/mm/yyyy)</span><span class="lang-en">Claim date (dd/mm/yyyy)</span></td></tr>
+            <tr><td class="field-name">anno</td><td class="field-type">integer</td><td class="field-desc"><span class="lang-it">Anno della rivendicazione</span><span class="lang-en">Year of the claim</span></td></tr>
+            <tr><td class="field-name">vittima</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Nome dell'organizzazione colpita</span><span class="lang-en">Name of the targeted organization</span></td></tr>
+            <tr><td class="field-name">gruppo</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Gruppo ransomware responsabile</span><span class="lang-en">Responsible ransomware group</span></td></tr>
+            <tr><td class="field-name">link</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Dominio web della vittima</span><span class="lang-en">Victim's web domain</span></td></tr>
+            <tr><td class="field-name">provincia</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Provincia italiana</span><span class="lang-en">Italian province</span></td></tr>
+            <tr><td class="field-name">regione</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Regione italiana</span><span class="lang-en">Italian region</span></td></tr>
+            <tr><td class="field-name">dati_gb</td><td class="field-type">float</td><td class="field-desc"><span class="lang-it">GB di dati pubblicati (0 = non pubblicati o non quantificati)</span><span class="lang-en">GB of published data (0 = not published or unquantified)</span></td></tr>
+            <tr><td class="field-name">note</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Note di verifica (es. "RIMOSSA DAL DLS", "NON PUBBLICATI")</span><span class="lang-en">Verification notes (e.g. "RIMOSSA DAL DLS", "NON PUBBLICATI")</span></td></tr>
+          </tbody>
+        </table>
+        <div class="code-label"><span class="lang-it">Esempio risposta</span><span class="lang-en">Response example</span></div>
+        <div class="code-block"><pre>{
+  <span class="j-key">"source"</span><span class="j-punc">:</span> <span class="j-str">"ransomnews.online"</span><span class="j-punc">,</span>
+  <span class="j-key">"generated"</span><span class="j-punc">:</span> <span class="j-str">"2026-05-11T00:47:03.931502+00:00"</span><span class="j-punc">,</span>
+  <span class="j-key">"total"</span><span class="j-punc">:</span> <span class="j-num">751</span><span class="j-punc">,</span>
+  <span class="j-key">"records"</span><span class="j-punc">: [</span>
+    <span class="j-punc">{</span>
+      <span class="j-key">"id"</span><span class="j-punc">:</span> <span class="j-str">"00001"</span><span class="j-punc">,</span>
+      <span class="j-key">"data"</span><span class="j-punc">:</span> <span class="j-str">"08/10/2020"</span><span class="j-punc">,</span>
+      <span class="j-key">"anno"</span><span class="j-punc">:</span> <span class="j-num">2020</span><span class="j-punc">,</span>
+      <span class="j-key">"vittima"</span><span class="j-punc">:</span> <span class="j-str">"Campari Group"</span><span class="j-punc">,</span>
+      <span class="j-key">"gruppo"</span><span class="j-punc">:</span> <span class="j-str">"ragnarlocker"</span><span class="j-punc">,</span>
+      <span class="j-key">"link"</span><span class="j-punc">:</span> <span class="j-str">"camparigroup.com"</span><span class="j-punc">,</span>
+      <span class="j-key">"provincia"</span><span class="j-punc">:</span> <span class="j-str">"Milano"</span><span class="j-punc">,</span>
+      <span class="j-key">"regione"</span><span class="j-punc">:</span> <span class="j-str">"Lombardia"</span><span class="j-punc">,</span>
+      <span class="j-key">"dati_gb"</span><span class="j-punc">:</span> <span class="j-num">0.0</span><span class="j-punc">,</span>
+      <span class="j-key">"note"</span><span class="j-punc">:</span> <span class="j-str">""</span>
+    <span class="j-punc">}</span>
+  <span class="j-punc">]</span>
+<span class="j-punc">}</span></pre></div>
+      </div>
+    </div>
+
+    <!-- stats.json -->
+    <div class="endpoint" id="ep2">
+      <div class="endpoint-header" onclick="toggleEp('ep2')">
+        <span class="method">GET</span>
+        <span class="endpoint-path">stats.json</span>
+        <span class="endpoint-desc"><span class="lang-it">Statistiche aggregate</span><span class="lang-en">Aggregate statistics</span></span>
+        <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="endpoint-body">
+        <p>
+          <span class="lang-it">Restituisce statistiche aggregate: totali, dati per anno, top 5 gruppi per rivendicazioni e per GB pubblicati, top 5 regioni.</span>
+          <span class="lang-en">Returns aggregate statistics: totals, data by year, top 5 groups by claims and by published GB, top 5 regions.</span>
+        </p>
+        <div class="code-label">URL</div>
+        <div class="code-block"><pre>https://ransomnews.online/api/v1/stats.json</pre></div>
+        <br>
+        <div class="code-label"><span class="lang-it">Esempio risposta</span><span class="lang-en">Response example</span></div>
+        <div class="code-block"><pre>{
+  <span class="j-key">"source"</span><span class="j-punc">:</span> <span class="j-str">"ransomnews.online"</span><span class="j-punc">,</span>
+  <span class="j-key">"generated"</span><span class="j-punc">:</span> <span class="j-str">"2026-05-11T00:47:03+00:00"</span><span class="j-punc">,</span>
+  <span class="j-key">"totali"</span><span class="j-punc">: {</span>
+    <span class="j-key">"rivendicazioni"</span><span class="j-punc">:</span> <span class="j-num">751</span><span class="j-punc">,</span>
+    <span class="j-key">"gruppi_a_catalogo"</span><span class="j-punc">:</span> <span class="j-num">167</span><span class="j-punc">,</span>
+    <span class="j-key">"dati_gb"</span><span class="j-punc">:</span> <span class="j-num">65484.18</span>
+  <span class="j-punc">},</span>
+  <span class="j-key">"per_anno"</span><span class="j-punc">: {</span>
+    <span class="j-key">"2026"</span><span class="j-punc">: {</span>
+      <span class="j-key">"rivendicazioni"</span><span class="j-punc">:</span> <span class="j-num">110</span><span class="j-punc">,</span>
+      <span class="j-key">"dati_gb"</span><span class="j-punc">:</span> <span class="j-num">8601.86</span><span class="j-punc">,</span>
+      <span class="j-key">"gruppi_attivi"</span><span class="j-punc">:</span> <span class="j-num">27</span>
+    <span class="j-punc">}</span>
+  <span class="j-punc">},</span>
+  <span class="j-key">"top5_gruppi_per_rivendicazioni"</span><span class="j-punc">: [</span>
+    <span class="j-punc">{</span> <span class="j-key">"gruppo"</span><span class="j-punc">:</span> <span class="j-str">"lockbit3"</span><span class="j-punc">,</span> <span class="j-key">"rivendicazioni"</span><span class="j-punc">:</span> <span class="j-num">61</span> <span class="j-punc">}</span>
+  <span class="j-punc">]</span>
+<span class="j-punc">}</span></pre></div>
+      </div>
+    </div>
+
+    <!-- gruppi.json -->
+    <div class="endpoint" id="ep3">
+      <div class="endpoint-header" onclick="toggleEp('ep3')">
+        <span class="method">GET</span>
+        <span class="endpoint-path">gruppi.json</span>
+        <span class="endpoint-desc"><span class="lang-it">Catalogo gruppi</span><span class="lang-en">Groups catalogue</span></span>
+        <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="endpoint-body">
+        <p>
+          <span class="lang-it">Restituisce il catalogo completo dei gruppi ransomware monitorati, con statistiche per ciascuno.</span>
+          <span class="lang-en">Returns the complete catalogue of monitored ransomware groups, with statistics for each.</span>
+        </p>
+        <div class="code-label">URL</div>
+        <div class="code-block"><pre>https://ransomnews.online/api/v1/gruppi.json</pre></div>
+        <br>
+        <table class="fields-table">
+          <thead><tr><th><span class="lang-it">Campo</span><span class="lang-en">Field</span></th><th><span class="lang-it">Tipo</span><span class="lang-en">Type</span></th><th><span class="lang-it">Descrizione</span><span class="lang-en">Description</span></th></tr></thead>
+          <tbody>
+            <tr><td class="field-name">nome</td><td class="field-type">string</td><td class="field-desc"><span class="lang-it">Nome del gruppo</span><span class="lang-en">Group name</span></td></tr>
+            <tr><td class="field-name">rivendicazioni</td><td class="field-type">integer</td><td class="field-desc"><span class="lang-it">Numero di rivendicazioni contro target italiani</span><span class="lang-en">Number of claims against Italian targets</span></td></tr>
+            <tr><td class="field-name">dati_gb</td><td class="field-type">float</td><td class="field-desc"><span class="lang-it">GB totali pubblicati dal gruppo</span><span class="lang-en">Total GB published by the group</span></td></tr>
+            <tr><td class="field-name">anni_attivi</td><td class="field-type">array</td><td class="field-desc"><span class="lang-it">Anni in cui il gruppo ha colpito target italiani</span><span class="lang-en">Years in which the group targeted Italian organizations</span></td></tr>
+          </tbody>
+        </table>
+        <div class="code-label"><span class="lang-it">Esempio risposta</span><span class="lang-en">Response example</span></div>
+        <div class="code-block"><pre>{
+  <span class="j-key">"source"</span><span class="j-punc">:</span> <span class="j-str">"ransomnews.online"</span><span class="j-punc">,</span>
+  <span class="j-key">"total"</span><span class="j-punc">:</span> <span class="j-num">167</span><span class="j-punc">,</span>
+  <span class="j-key">"gruppi"</span><span class="j-punc">: [</span>
+    <span class="j-punc">{</span>
+      <span class="j-key">"nome"</span><span class="j-punc">:</span> <span class="j-str">"akira"</span><span class="j-punc">,</span>
+      <span class="j-key">"rivendicazioni"</span><span class="j-punc">:</span> <span class="j-num">48</span><span class="j-punc">,</span>
+      <span class="j-key">"dati_gb"</span><span class="j-punc">:</span> <span class="j-num">312.5</span><span class="j-punc">,</span>
+      <span class="j-key">"anni_attivi"</span><span class="j-punc">: [</span><span class="j-num">2023</span><span class="j-punc">,</span> <span class="j-num">2024</span><span class="j-punc">,</span> <span class="j-num">2025</span><span class="j-punc">,</span> <span class="j-num">2026</span><span class="j-punc">]</span>
+    <span class="j-punc">}</span>
+  <span class="j-punc">]</span>
+<span class="j-punc">}</span></pre></div>
+      </div>
+    </div>
+
+    <!-- anno/YYYY.json -->
+    <div class="endpoint" id="ep4">
+      <div class="endpoint-header" onclick="toggleEp('ep4')">
+        <span class="method">GET</span>
+        <span class="endpoint-path">anno/{anno}.json</span>
+        <span class="endpoint-desc"><span class="lang-it">Dati per anno</span><span class="lang-en">Data by year</span></span>
+        <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="endpoint-body">
+        <p>
+          <span class="lang-it">Restituisce le rivendicazioni di un singolo anno. Sostituire <code style="font-family:var(--mono);color:var(--blue)">{anno}</code> con uno degli anni disponibili.</span>
+          <span class="lang-en">Returns claims for a single year. Replace <code style="font-family:var(--mono);color:var(--blue)">{anno}</code> with one of the available years.</span>
+        </p>
+        <div class="code-label"><span class="lang-it">Anni disponibili</span><span class="lang-en">Available years</span></div>
+        <div class="code-block"><pre>https://ransomnews.online/api/v1/anno/2020.json
+https://ransomnews.online/api/v1/anno/2021.json
+https://ransomnews.online/api/v1/anno/2022.json
+https://ransomnews.online/api/v1/anno/2023.json
+https://ransomnews.online/api/v1/anno/2024.json
+https://ransomnews.online/api/v1/anno/2025.json
+https://ransomnews.online/api/v1/anno/2026.json</pre></div>
+        <div class="code-label" style="margin-top:14px"><span class="lang-it">Esempio risposta</span><span class="lang-en">Response example</span></div>
+        <div class="code-block"><pre>{
+  <span class="j-key">"source"</span><span class="j-punc">:</span> <span class="j-str">"ransomnews.online"</span><span class="j-punc">,</span>
+  <span class="j-key">"anno"</span><span class="j-punc">:</span> <span class="j-num">2026</span><span class="j-punc">,</span>
+  <span class="j-key">"total"</span><span class="j-punc">:</span> <span class="j-num">110</span><span class="j-punc">,</span>
+  <span class="j-key">"records"</span><span class="j-punc">: [</span> <span class="j-punc">...</span> <span class="j-punc">]</span>
+<span class="j-punc">}</span></pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="section">
+    <div class="section-title"><span class="lang-it">Note sull'utilizzo</span><span class="lang-en">Usage notes</span></div>
+
+    <div class="note-box">
+      <strong><span class="lang-it">Aggiornamento automatico</span><span class="lang-en">Automatic updates</span></strong><br>
+      <span class="lang-it">I file JSON vengono rigenerati automaticamente ad ogni aggiornamento della dashboard tramite GitHub Actions. Il campo <code style="font-family:var(--mono)">generated</code> in ogni risposta indica la data e ora dell'ultima rigenerazione.</span>
+      <span class="lang-en">JSON files are automatically regenerated on every dashboard update via GitHub Actions. The <code style="font-family:var(--mono)">generated</code> field in each response indicates the date and time of the last regeneration.</span>
+    </div>
+
+    <div class="note-box" style="margin-top:12px">
+      <strong>CORS</strong><br>
+      <span class="lang-it">Le API sono servite tramite GitHub Pages e supportano richieste cross-origin (CORS). È possibile interrogarle direttamente da browser o da qualsiasi client HTTP.</span>
+      <span class="lang-en">The APIs are served via GitHub Pages and support cross-origin requests (CORS). They can be queried directly from a browser or any HTTP client.</span>
+    </div>
+
+    <div class="warn-box" style="margin-top:12px">
+      <strong><span class="lang-it">Dati verificati manualmente</span><span class="lang-en">Manually verified data</span></strong><br>
+      <span class="lang-it">Tutti i record sono verificati manualmente. I dati relativi agli anni 2020–2023 non includono i GB pubblicati (campo <code style="font-family:var(--mono)">dati_gb</code> = 0). Le rivendicazioni con vittima anonimizzata o rimosse dal data leak site sono incluse con le informazioni disponibili.</span>
+      <span class="lang-en">All records are manually verified. Data for years 2020–2023 does not include published GB (<code style="font-family:var(--mono)">dati_gb</code> = 0). Claims with anonymized victims or removed from the data leak site are included with available information.</span>
+    </div>
+
+    <div class="warn-box" style="margin-top:12px">
+      <strong><span class="lang-it">Utilizzo responsabile</span><span class="lang-en">Responsible use</span></strong><br>
+      <span class="lang-it">I dati sono forniti a scopo di ricerca, giornalismo e consapevolezza sulla minaccia ransomware. Si prega di citare ransomNews come fonte in caso di pubblicazione.</span>
+      <span class="lang-en">Data is provided for research, journalism, and ransomware threat awareness purposes. Please cite ransomNews as the source when publishing.</span>
+    </div>
+  </div>
+
+  <!-- ESEMPIO FETCH -->
+  <div class="section">
+    <div class="section-title"><span class="lang-it">Esempio di utilizzo</span><span class="lang-en">Usage example</span></div>
+    <div class="code-label">JavaScript (fetch)</div>
+    <div class="code-block"><pre><span class="j-key">const</span> res = <span class="j-bool">await</span> fetch(<span class="j-str">'https://ransomnews.online/api/v1/stats.json'</span>);
+<span class="j-key">const</span> data = <span class="j-bool">await</span> res.json();
+console.log(data.totali.rivendicazioni); <span class="j-null">// 751</span></pre></div>
+    <div class="code-label" style="margin-top:14px">Python (requests)</div>
+    <div class="code-block"><pre><span class="j-bool">import</span> requests
+
+r = requests.get(<span class="j-str">'https://ransomnews.online/api/v1/rivendicazioni.json'</span>)
+data = r.json()
+<span class="j-bool">print</span>(data[<span class="j-str">'total'</span>])  <span class="j-null"># 751</span></pre></div>
+    <div class="code-label" style="margin-top:14px">curl</div>
+    <div class="code-block"><pre>curl https://ransomnews.online/api/v1/stats.json | python3 -m json.tool</pre></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="lang-it">ransomNews API v1 · Dati aggiornati automaticamente · <a href="index.html">← Torna alla dashboard</a></span>
+  <span class="lang-en">ransomNews API v1 · Automatically updated data · <a href="index.html">← Back to dashboard</a></span>
+</footer>
+
+<script>
+function setLang(lang) {
+  document.body.className = 'lang-' + lang;
+  document.getElementById('btnIT').classList.toggle('active', lang === 'it');
+  document.getElementById('btnEN').classList.toggle('active', lang === 'en');
+  document.documentElement.lang = lang;
+}
+
+function toggleEp(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// Open first endpoint by default
+document.getElementById('ep1').classList.add('open');
+</script>
+</body>
+</html>
