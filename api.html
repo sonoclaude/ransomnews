@@ -19,7 +19,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:16px;padding:0 28px;height:52px;background:var(--surface);border-bottom:1px solid var(--border)}
 .nav-logo{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--white);text-decoration:none;letter-spacing:-0.02em}
-.nav-logo .dot{color:var(--red)}
+.nav-logo .red{color:var(--red)}
 .nav-sep{width:1px;height:20px;background:var(--border2)}
 .nav-badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--green);background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.25);border-radius:6px;padding:2px 8px;text-transform:uppercase}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
@@ -34,7 +34,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:16px;p
 
 .hero{margin-bottom:52px;padding-bottom:40px;border-bottom:1px solid var(--border)}
 .hero-tag{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--green);text-transform:uppercase;margin-bottom:16px}
-.hero h1{font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.15;letter-spacing:-0.03em;color:var(--white);margin-bottom:16px}
+.hero h1{font-size:clamp(22px,3.5vw,34px);font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:var(--white);margin-bottom:16px;white-space:nowrap}
 .hero h1 .accent{color:var(--red)}
 .hero-desc{font-size:16px;color:var(--text-dim);max-width:640px;line-height:1.7;margin-bottom:28px}
 .hero-meta{display:flex;gap:24px;flex-wrap:wrap}
@@ -96,7 +96,7 @@ footer a:hover{color:var(--green)}
 <body>
 
 <nav>
-  <a href="index.html" class="nav-logo">ransom<span class="dot">News</span></a>
+  <a href="index.html" class="nav-logo">ransom<span class="red">News</span></a>
   <div class="nav-sep"></div>
   <span class="nav-badge">API v1</span>
   <div class="nav-right">
@@ -259,7 +259,7 @@ data = r.json()
 <script>
 const T = {
   it: {
-    h1: 'Dati ransomware <span class="accent">italiani</span>,<br>in formato aperto',
+    h1: 'Dati ransomware <span class="accent">italiani</span>, in formato aperto',
     heroDesc: 'Le API di ransomNews espongono in formato JSON i dati raccolti e verificati manualmente sulle rivendicazioni ransomware contro organizzazioni italiane, a partire dall\'ottobre 2020. Accesso libero, nessuna autenticazione richiesta.',
     meta1: 'Endpoint attivi', meta2: 'Aggiornamento automatico', meta3: 'Nessuna autenticazione',
     stat1: 'Rivendicazioni', stat2: 'Gruppi a catalogo', stat3: 'GB pubblicati', stat4: 'Copertura temporale',
@@ -297,7 +297,7 @@ const T = {
     footer: 'ransomNews API v1 · Dati aggiornati automaticamente · <a href="index.html">← Torna alla dashboard</a>'
   },
   en: {
-    h1: 'Italian ransomware data,<br><span class="accent">open format</span>',
+    h1: 'Italian ransomware data, <span class="accent">open format</span>',
     heroDesc: 'The ransomNews API exposes in JSON format the manually collected and verified data on ransomware claims against Italian organizations, starting from October 2020. Open access, no authentication required.',
     meta1: 'Live endpoints', meta2: 'Auto-updated', meta3: 'No authentication',
     stat1: 'Claims', stat2: 'Groups catalogued', stat3: 'GB published', stat4: 'Time coverage',
