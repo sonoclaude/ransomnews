@@ -1,42 +1,291 @@
-name: Ransom Alert Italia
 
-on:
-  schedule:
-    - cron: '*/30 * * * *'   # ogni 30 minuti — check rivendicazioni
-    - cron: '30 5 * * *'     # 07:30 ora italiana (05:30 UTC) — ping mattutino
-    - cron: '30 18 * * *'    # 20:30 ora italiana (18:30 UTC) — ping serale
-  workflow_dispatch:          # avvio manuale da GitHub
+#!/usr/bin/env python3
+"""
+ransom_alert.py — Monitor rivendicazioni ransomware Italia
+Versione GitHub Actions: gira sui server GitHub ogni 30 minuti.
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+Sorgenti:
+  - bsky.app/profile/ecrime.ch (API Bluesky diretta)
+  - ransomware.live (API)
+  - ransomlook.io/rss (RSS feed)
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+Ping di stato: 07:30 e 20:30 ora italiana
+"""
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+import json
+import os
+import time
+import hashlib
+import logging
+import re
+from pathlib import Path
+from datetime import datetime, timezone, timedelta
 
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4
+import requests
+from bs4 import BeautifulSoup
 
-      - name: Run ransom alert
-        env:
-          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule }}
-        run: python ransom_alert/ransom_alert.py
+# ─── CONFIGURAZIONE ───────────────────────────────────────────────────────────
 
-      - name: Salva seen.json nel repository
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ransom_alert/seen.json
-          git diff --cached --quiet || git commit -m "Auto: aggiorna seen.json [skip ci]"
-          git pull --rebase origin main
-          git push
+TELEGRAM_TOKEN   = os.environ["TELEGRAM_TOKEN"]
+TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+
+# Schedule corrente passata dal workflow
+CURRENT_SCHEDULE = os.environ.get("GITHUB_EVENT_SCHEDULE", "")
+
+# Cron dei ping (in UTC)
+PING_SCHEDULES = {"30 5 * * *", "30 18 * * *"}
+
+SEEN_FILE = Path(__file__).parent / "seen.json"
+TIMEOUT   = 15
+
+ITALY_KEYWORDS = [
+    "italy", "italia", "italian",
+    r"\.it\b",
+    r"\bS\.r\.l\b", r"\bSrl\b", r"\bS\.p\.A\b", r"\bSpA\b",
+    r"\bs\.n\.c\b", r"\bsnc\b", r"\bs\.a\.s\b", r"\bsas\b",
+    "milano", "roma", "napoli", "torino", "bologna",
+    "firenze", "venezia", "genova", "palermo", "bari",
+    "comune di", "provincia di", "regione ",
+]
+ITALY_RE = re.compile("|".join(ITALY_KEYWORDS), re.IGNORECASE)
+
+HEADERS       = {"User-Agent": "RansomAlert-Monitor/1.0"}
+
+# Filtro CONSERVATIVO per ransomlook (solo indicatori certi, no falsi positivi)
+ITALY_STRICT_RE = re.compile(
+    r'(\.it\b'
+    r'|\bS\.r\.l\b|\bSrl\b|\bS\.p\.A\b|\bSpA\b'
+    r'|\bs\.n\.c\b|\bsnc\b|\bs\.a\.s\b|\bsas\b'
+    r'|\bcomune di\b|\bprovincia di\b'
+    r'|\bmilano\b|\broma\b|\bnapoli\b|\btorino\b|\bbologna\b'
+    r'|\bfirenze\b|\bvenezia\b|\bgenova\b|\bpalermo\b|\bbari\b)',
+    re.IGNORECASE
+)
+
+BSKY_API      = "https://public.api.bsky.app/xrpc"
+ECRIME_HANDLE = "ecrime.ch"
+
+# ─── LOGGING ──────────────────────────────────────────────────────────────────
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+log = logging.getLogger(__name__)
+
+# ─── STATO PERSISTENTE ────────────────────────────────────────────────────────
+
+def load_seen() -> set:
+    if SEEN_FILE.exists():
+        return set(json.loads(SEEN_FILE.read_text()))
+    return set()
+
+def save_seen(seen: set):
+    SEEN_FILE.write_text(json.dumps(sorted(list(seen)), indent=2))
+
+def make_id(source: str, uid: str) -> str:
+    return hashlib.md5(f"{source}:{uid}".encode()).hexdigest()
+
+# ─── TELEGRAM ─────────────────────────────────────────────────────────────────
+
+def send_telegram(text: str):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True,
+    }
+    try:
+        r = requests.post(url, json=payload, timeout=TIMEOUT)
+        r.raise_for_status()
+        log.info("✅ Telegram inviato")
+    except Exception as e:
+        log.error(f"Telegram error: {e}")
+
+def format_alert(source: str, victim: str, group: str, date: str,
+                 extra: str = "", url: str = "") -> str:
+    lines = [
+        "🚨 <b>NUOVA RIVENDICAZIONE — ITALIA</b>",
+        f"🏴‍☠️ Gruppo: <b>{group}</b>",
+        f"🏢 Vittima: <b>{victim}</b>",
+    ]
+    if extra:
+        lines.append(extra)
+    lines += [
+        f"📅 Data: {date}",
+        f"📡 Fonte: {source}",
+    ]
+    if url:
+        lines.append(f"🔗 <a href='{url}'>Dettaglio</a>")
+    return "\n".join(lines)
+
+def send_ping(label: str):
+    now_it = datetime.now(timezone(timedelta(hours=2)))
+    seen   = load_seen()
+    text = (
+        f"{'🌅' if 'mattino' in label else '🌆'} <b>RansomAlert — {label}</b>\n"
+        f"📡 Sistema operativo\n"
+        f"🕐 {now_it.strftime('%d/%m/%Y %H:%M')} (ora italiana)\n"
+        f"📋 Rivendicazioni monitorate: {len(seen)}"
+    )
+    send_telegram(text)
+
+# ─── PARSER TESTO ecrime.ch ───────────────────────────────────────────────────
+
+def parse_ecrime_post(text: str) -> dict:
+    result = {"organization": "", "location": "", "industry": "",
+              "staff": "", "group": "", "url": ""}
+    m = re.search(r"group\s+#(\S+)", text, re.IGNORECASE)
+    if m:
+        result["group"] = m.group(1).rstrip(".")
+    for field, key in [
+        (r"Organization:\s*(.+)", "organization"),
+        (r"Location:\s*(.+)",     "location"),
+        (r"Industry:\s*(.+)",     "industry"),
+        (r"Staff:\s*(.+)",        "staff"),
+        (r"Learn more:\s*(https?://\S+)", "url"),
+    ]:
+        m = re.search(field, text, re.IGNORECASE)
+        if m:
+            result[key] = m.group(1).strip()
+    return result
+
+# ─── SORGENTE 1: ecrime.ch Bluesky ───────────────────────────────────────────
+
+def fetch_ecrime_bsky(seen: set) -> list:
+    new_items = []
+    try:
+        url    = f"{BSKY_API}/app.bsky.feed.getAuthorFeed"
+        params = {"actor": ECRIME_HANDLE, "limit": 30, "filter": "posts_no_replies"}
+        r      = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
+        r.raise_for_status()
+        for item in r.json().get("feed", []):
+            if item.get("reason"):
+                continue
+            post   = item.get("post", {})
+            record = post.get("record", {})
+            text   = record.get("text", "")
+            if not ITALY_RE.search(text):
+                continue
+            uri = post.get("uri", "")
+            vid = make_id("ecrime_bsky", hashlib.md5(uri.encode()).hexdigest())
+            if vid in seen:
+                continue
+            parsed     = parse_ecrime_post(text)
+            victim     = parsed["organization"] or text[:60]
+            group      = parsed["group"] or "ecrime.ch"
+            date_raw   = record.get("createdAt", "")[:16].replace("T", " ")
+            rkey       = uri.split("/")[-1] if uri else ""
+            post_url   = (f"https://bsky.app/profile/{ECRIME_HANDLE}/post/{rkey}"
+                          if rkey else "https://bsky.app/profile/ecrime.ch")
+            detail_url = parsed["url"] or post_url
+            extra_parts = []
+            if parsed["location"]: extra_parts.append(f"📍 {parsed['location']}")
+            if parsed["industry"]: extra_parts.append(f"🏭 {parsed['industry']}")
+            if parsed["staff"]:    extra_parts.append(f"👥 {parsed['staff']}")
+            seen.add(vid)
+            new_items.append(format_alert("ecrime.ch (Bluesky)", victim, group,
+                                          date_raw, "  ".join(extra_parts), detail_url))
+        log.info(f"ecrime.ch bsky: {len(new_items)} nuovi")
+    except Exception as e:
+        log.error(f"ecrime.ch bsky error: {e}")
+    return new_items
+
+# ─── SORGENTE 3: ransomware.live (API Italia) ────────────────────────────────
+
+def fetch_ransomwarelive(seen: set) -> list:
+    new_items = []
+    try:
+        # Endpoint recenti vittime, filtriamo per country IT/ITA/Italy
+        url = "https://api.ransomware.live/v2/recentvictims"
+        r   = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        r.raise_for_status()
+        victims = r.json() if isinstance(r.json(), list) else r.json().get("victims", [])
+        for item in victims:
+            country = item.get("country", "").lower().strip()
+            if country not in ("it", "ita", "italy", "italia"):
+                continue
+            uid = str(item.get("id", item.get("post_id",
+                      hashlib.md5(str(item).encode()).hexdigest())))
+            vid = make_id("ransomwarelive", uid)
+            if vid in seen:
+                continue
+            victim = item.get("victim", item.get("post_title", "N/A"))
+            group  = item.get("group",  item.get("gang", "N/A"))
+            date   = (item.get("discoverdate") or item.get("discovered") or item.get("published") or item.get("date") or "N/A")[:19]
+            link   = item.get("url", "https://www.ransomware.live/")
+            seen.add(vid)
+            new_items.append(format_alert("ransomware.live", victim, group, date, url=link))
+        log.info(f"ransomware.live: {len(new_items)} nuovi")
+    except Exception as e:
+        log.error(f"ransomware.live error: {e}")
+    return new_items
+
+
+# ─── SORGENTE 3: ransomlook.io (RSS) ─────────────────────────────────────────
+
+def fetch_ransomlook_rss(seen: set) -> list:
+    new_items = []
+    try:
+        import xml.etree.ElementTree as ET
+        r = requests.get("https://www.ransomlook.io/rss.xml",
+                         headers=HEADERS, timeout=TIMEOUT)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        for item in root.findall(".//item"):
+            title = item.findtext("title", "")
+            desc  = item.findtext("description", "")
+            full  = f"{title} {desc}"
+            # Filtro CONSERVATIVO: solo indicatori certi di italianità
+            if not ITALY_STRICT_RE.search(full):
+                continue
+            link  = item.findtext("link", "https://www.ransomlook.io/recent")
+            date  = item.findtext("pubDate", "N/A")[:16]
+            uid   = hashlib.md5(link.encode()).hexdigest()
+            vid   = make_id("ransomlook_rss", uid)
+            if vid in seen:
+                continue
+            # Estrai gruppo dalla descrizione (es. "lockbit3")
+            group_m = re.search(r"group[:\s]+([\w\s-]+)", desc, re.IGNORECASE)
+            group   = group_m.group(1).strip()[:30] if group_m else "N/A"
+            seen.add(vid)
+            new_items.append(format_alert("ransomlook.io", title[:80], group, date, url=link))
+        log.info(f"ransomlook.io RSS: {len(new_items)} nuovi")
+    except Exception as e:
+        log.error(f"ransomlook.io RSS error: {e}")
+    return new_items
+
+# ─── MAIN ─────────────────────────────────────────────────────────────────────
+
+def main():
+    # Se è un ping di stato, invia e basta
+    if CURRENT_SCHEDULE in PING_SCHEDULES:
+        label = "Ping mattutino" if CURRENT_SCHEDULE == "30 5 * * *" else "Ping serale"
+        log.info(f"=== {label} ===")
+        send_ping(label)
+        return
+
+    # Altrimenti check normale
+    log.info("=== Avvio check ===")
+    seen    = load_seen()
+    all_new = []
+
+    all_new += fetch_ecrime_bsky(seen)
+    all_new += fetch_ransomwarelive(seen)
+    all_new += fetch_ransomlook_rss(seen)
+
+    save_seen(seen)
+
+    if all_new:
+        log.info(f"🚨 {len(all_new)} nuove rivendicazioni italiane trovate!")
+        for msg in all_new:
+            send_telegram(msg)
+            time.sleep(1)
+    else:
+        log.info("Nessuna novità italiana.")
+
+    log.info("=== Check completato ===")
+
+if __name__ == "__main__":
+    main()
