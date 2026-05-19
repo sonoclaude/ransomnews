@@ -5,7 +5,6 @@ Versione GitHub Actions: gira sui server GitHub ogni 30 minuti.
 
 Sorgenti:
   - bsky.app/profile/ecrime.ch (API Bluesky diretta)
-  - ransom-db.com/live-updates (scraping)
   - ransomlook.io/recent (scraping)
 
 Ping di stato: 07:30 e 20:30 ora italiana
@@ -179,35 +178,6 @@ def fetch_ecrime_bsky(seen: set) -> list:
         log.error(f"ecrime.ch bsky error: {e}")
     return new_items
 
-# ─── SORGENTE 2: ransom-db.com ───────────────────────────────────────────────
-
-def fetch_ransomdb(seen: set) -> list:
-    new_items = []
-    try:
-        url = "https://www.ransom-db.com/live-updates"
-        r   = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-        for row in soup.select("table tbody tr, .victim-row, .entry"):
-            text = row.get_text(" ", strip=True)
-            if not ITALY_RE.search(text):
-                continue
-            uid  = hashlib.md5(text[:120].encode()).hexdigest()
-            vid  = make_id("ransomdb", uid)
-            if vid in seen:
-                continue
-            cells  = row.find_all(["td", "div"])
-            victim = cells[0].get_text(strip=True) if cells else text[:60]
-            group  = cells[1].get_text(strip=True) if len(cells) > 1 else "N/A"
-            date   = cells[2].get_text(strip=True) if len(cells) > 2 else "N/A"
-            seen.add(vid)
-            new_items.append(format_alert("ransom-db.com", victim, group, date,
-                                          url="https://www.ransom-db.com/live-updates"))
-        log.info(f"ransom-db.com: {len(new_items)} nuovi")
-    except Exception as e:
-        log.error(f"ransom-db error: {e}")
-    return new_items
-
 # ─── SORGENTE 3: ransomware.live (API Italia) ────────────────────────────────
 
 def fetch_ransomwarelive(seen: set) -> list:
@@ -254,7 +224,6 @@ def main():
     all_new = []
 
     all_new += fetch_ecrime_bsky(seen)
-    all_new += fetch_ransomdb(seen)
     all_new += fetch_ransomwarelive(seen)
 
     save_seen(seen)
