@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 ransom_alert.py — Monitor rivendicazioni ransomware Italia
