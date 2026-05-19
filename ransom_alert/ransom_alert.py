@@ -7,6 +7,8 @@ Sorgenti:
   - bsky.app/profile/ecrime.ch (API Bluesky diretta)
   - ransom-db.com/live-updates (scraping)
   - ransomlook.io/recent (scraping)
+
+Ping di stato: 07:30 e 20:30 ora italiana
 """
 
 import json
@@ -16,7 +18,7 @@ import hashlib
 import logging
 import re
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import requests
 from bs4 import BeautifulSoup
@@ -26,7 +28,12 @@ from bs4 import BeautifulSoup
 TELEGRAM_TOKEN   = os.environ["TELEGRAM_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-# Il file seen.json è nella stessa cartella dello script (nel repo)
+# Schedule corrente passata dal workflow
+CURRENT_SCHEDULE = os.environ.get("GITHUB_EVENT_SCHEDULE", "")
+
+# Cron dei ping (in UTC)
+PING_SCHEDULES = {"30 5 * * *", "30 18 * * *"}
+
 SEEN_FILE = Path(__file__).parent / "seen.json"
 TIMEOUT   = 15
 
@@ -41,8 +48,8 @@ ITALY_KEYWORDS = [
 ]
 ITALY_RE = re.compile("|".join(ITALY_KEYWORDS), re.IGNORECASE)
 
-HEADERS      = {"User-Agent": "RansomAlert-Monitor/1.0"}
-BSKY_API     = "https://public.api.bsky.app/xrpc"
+HEADERS       = {"User-Agent": "RansomAlert-Monitor/1.0"}
+BSKY_API      = "https://public.api.bsky.app/xrpc"
 ECRIME_HANDLE = "ecrime.ch"
 
 # ─── LOGGING ──────────────────────────────────────────────────────────────────
@@ -100,6 +107,17 @@ def format_alert(source: str, victim: str, group: str, date: str,
         lines.append(f"🔗 <a href='{url}'>Dettaglio</a>")
     return "\n".join(lines)
 
+def send_ping(label: str):
+    now_it = datetime.now(timezone(timedelta(hours=2)))
+    seen   = load_seen()
+    text = (
+        f"{'🌅' if 'mattino' in label else '🌆'} <b>RansomAlert — {label}</b>\n"
+        f"📡 Sistema operativo\n"
+        f"🕐 {now_it.strftime('%d/%m/%Y %H:%M')} (ora italiana)\n"
+        f"📋 Rivendicazioni monitorate: {len(seen)}"
+    )
+    send_telegram(text)
+
 # ─── PARSER TESTO ecrime.ch ───────────────────────────────────────────────────
 
 def parse_ecrime_post(text: str) -> dict:
@@ -125,9 +143,9 @@ def parse_ecrime_post(text: str) -> dict:
 def fetch_ecrime_bsky(seen: set) -> list:
     new_items = []
     try:
-        url = f"{BSKY_API}/app.bsky.feed.getAuthorFeed"
+        url    = f"{BSKY_API}/app.bsky.feed.getAuthorFeed"
         params = {"actor": ECRIME_HANDLE, "limit": 30, "filter": "posts_no_replies"}
-        r = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
+        r      = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
         r.raise_for_status()
         for item in r.json().get("feed", []):
             if item.get("reason"):
@@ -141,18 +159,18 @@ def fetch_ecrime_bsky(seen: set) -> list:
             vid = make_id("ecrime_bsky", hashlib.md5(uri.encode()).hexdigest())
             if vid in seen:
                 continue
-            parsed   = parse_ecrime_post(text)
-            victim   = parsed["organization"] or text[:60]
-            group    = parsed["group"] or "ecrime.ch"
-            date_raw = record.get("createdAt", "")[:16].replace("T", " ")
-            rkey     = uri.split("/")[-1] if uri else ""
-            post_url = (f"https://bsky.app/profile/{ECRIME_HANDLE}/post/{rkey}"
-                        if rkey else "https://bsky.app/profile/ecrime.ch")
+            parsed     = parse_ecrime_post(text)
+            victim     = parsed["organization"] or text[:60]
+            group      = parsed["group"] or "ecrime.ch"
+            date_raw   = record.get("createdAt", "")[:16].replace("T", " ")
+            rkey       = uri.split("/")[-1] if uri else ""
+            post_url   = (f"https://bsky.app/profile/{ECRIME_HANDLE}/post/{rkey}"
+                          if rkey else "https://bsky.app/profile/ecrime.ch")
             detail_url = parsed["url"] or post_url
             extra_parts = []
-            if parsed["location"]:  extra_parts.append(f"📍 {parsed['location']}")
-            if parsed["industry"]:  extra_parts.append(f"🏭 {parsed['industry']}")
-            if parsed["staff"]:     extra_parts.append(f"👥 {parsed['staff']}")
+            if parsed["location"]: extra_parts.append(f"📍 {parsed['location']}")
+            if parsed["industry"]: extra_parts.append(f"🏭 {parsed['industry']}")
+            if parsed["staff"]:    extra_parts.append(f"👥 {parsed['staff']}")
             seen.add(vid)
             new_items.append(format_alert("ecrime.ch (Bluesky)", victim, group,
                                           date_raw, "  ".join(extra_parts), detail_url))
@@ -167,15 +185,15 @@ def fetch_ransomdb(seen: set) -> list:
     new_items = []
     try:
         url = "https://www.ransom-db.com/live-updates"
-        r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        r   = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
         for row in soup.select("table tbody tr, .victim-row, .entry"):
             text = row.get_text(" ", strip=True)
             if not ITALY_RE.search(text):
                 continue
-            uid = hashlib.md5(text[:120].encode()).hexdigest()
-            vid = make_id("ransomdb", uid)
+            uid  = hashlib.md5(text[:120].encode()).hexdigest()
+            vid  = make_id("ransomdb", uid)
             if vid in seen:
                 continue
             cells  = row.find_all(["td", "div"])
@@ -195,16 +213,16 @@ def fetch_ransomdb(seen: set) -> list:
 def fetch_ransomlook(seen: set) -> list:
     new_items = []
     try:
-        url = "https://www.ransomlook.io/recent"
-        r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        url  = "https://www.ransomlook.io/recent"
+        r    = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
         for row in soup.select("table tbody tr, .victim-row, .card, .entry"):
             text = row.get_text(" ", strip=True)
             if not ITALY_RE.search(text):
                 continue
-            uid = hashlib.md5(text[:120].encode()).hexdigest()
-            vid = make_id("ransomlook", uid)
+            uid  = hashlib.md5(text[:120].encode()).hexdigest()
+            vid  = make_id("ransomlook", uid)
             if vid in seen:
                 continue
             cells    = row.find_all(["td", "div"])
@@ -212,10 +230,10 @@ def fetch_ransomlook(seen: set) -> list:
             group    = cells[1].get_text(strip=True) if len(cells) > 1 else "N/A"
             date     = cells[2].get_text(strip=True) if len(cells) > 2 else "N/A"
             link_tag = row.find("a", href=True)
-            link = ("https://www.ransomlook.io" + link_tag["href"]
-                    if link_tag and link_tag["href"].startswith("/")
-                    else link_tag["href"] if link_tag
-                    else "https://www.ransomlook.io/recent")
+            link     = ("https://www.ransomlook.io" + link_tag["href"]
+                        if link_tag and link_tag["href"].startswith("/")
+                        else link_tag["href"] if link_tag
+                        else "https://www.ransomlook.io/recent")
             seen.add(vid)
             new_items.append(format_alert("ransomlook.io", victim, group, date, url=link))
         log.info(f"ransomlook.io: {len(new_items)} nuovi")
@@ -226,6 +244,14 @@ def fetch_ransomlook(seen: set) -> list:
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 def main():
+    # Se è un ping di stato, invia e basta
+    if CURRENT_SCHEDULE in PING_SCHEDULES:
+        label = "Ping mattutino" if CURRENT_SCHEDULE == "30 5 * * *" else "Ping serale"
+        log.info(f"=== {label} ===")
+        send_ping(label)
+        return
+
+    # Altrimenti check normale
     log.info("=== Avvio check ===")
     seen    = load_seen()
     all_new = []
