@@ -217,25 +217,34 @@ def fetch_ransomlook(seen: set) -> list:
         r    = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
-        for row in soup.select("table tbody tr, .victim-row, .card, .entry"):
-            text = row.get_text(" ", strip=True)
-            if not ITALY_RE.search(text):
+        # Struttura tabella ransomlook: Date | Title (victim) | Group
+        for row in soup.select("table tbody tr"):
+            cells = row.find_all("td")
+            if len(cells) < 3:
                 continue
-            uid  = hashlib.md5(text[:120].encode()).hexdigest()
+            date   = cells[0].get_text(strip=True)
+            victim = cells[1].get_text(strip=True)
+            group  = cells[2].get_text(strip=True)
+            # Filtro Italia sul nome vittima + testo completo riga
+            full_text = f"{victim} {date} {group}"
+            if not ITALY_RE.search(full_text):
+                continue
+            # Escludi falsi positivi: vittima deve contenere keyword italiana
+            # (evita match su date o nomi gruppo)
+            if not ITALY_RE.search(victim):
+                continue
+            uid  = hashlib.md5(f"{date}{victim}".encode()).hexdigest()
             vid  = make_id("ransomlook", uid)
             if vid in seen:
                 continue
-            cells    = row.find_all(["td", "div"])
-            victim   = cells[0].get_text(strip=True) if cells else text[:60]
-            group    = cells[1].get_text(strip=True) if len(cells) > 1 else "N/A"
-            date     = cells[2].get_text(strip=True) if len(cells) > 2 else "N/A"
-            link_tag = row.find("a", href=True)
+            # Link al gruppo
+            link_tag = cells[2].find("a", href=True)
             link     = ("https://www.ransomlook.io" + link_tag["href"]
                         if link_tag and link_tag["href"].startswith("/")
-                        else link_tag["href"] if link_tag
                         else "https://www.ransomlook.io/recent")
             seen.add(vid)
-            new_items.append(format_alert("ransomlook.io", victim, group, date, url=link))
+            new_items.append(format_alert("ransomlook.io", victim, group,
+                                          date[:19], url=link))
         log.info(f"ransomlook.io: {len(new_items)} nuovi")
     except Exception as e:
         log.error(f"ransomlook.io error: {e}")
