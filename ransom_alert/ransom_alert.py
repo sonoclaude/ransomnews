@@ -5,7 +5,8 @@ Versione GitHub Actions: gira sui server GitHub ogni 30 minuti.
 
 Sorgenti:
   - bsky.app/profile/ecrime.ch (API Bluesky diretta)
-  - ransomlook.io/recent (scraping)
+  - ransomware.live (API)
+  - ransomlook.io/rss (RSS feed)
 
 Ping di stato: 07:30 e 20:30 ora italiana
 """
@@ -48,6 +49,18 @@ ITALY_KEYWORDS = [
 ITALY_RE = re.compile("|".join(ITALY_KEYWORDS), re.IGNORECASE)
 
 HEADERS       = {"User-Agent": "RansomAlert-Monitor/1.0"}
+
+# Filtro CONSERVATIVO per ransomlook (solo indicatori certi, no falsi positivi)
+ITALY_STRICT_RE = re.compile(
+    r'(\.it\b'
+    r'|\bS\.r\.l\b|\bSrl\b|\bS\.p\.A\b|\bSpA\b'
+    r'|\bs\.n\.c\b|\bsnc\b|\bs\.a\.s\b|\bsas\b'
+    r'|\bcomune di\b|\bprovincia di\b'
+    r'|\bmilano\b|\broma\b|\bnapoli\b|\btorino\b|\bbologna\b'
+    r'|\bfirenze\b|\bvenezia\b|\bgenova\b|\bpalermo\b|\bbari\b)',
+    re.IGNORECASE
+)
+
 BSKY_API      = "https://public.api.bsky.app/xrpc"
 ECRIME_HANDLE = "ecrime.ch"
 
@@ -208,6 +221,40 @@ def fetch_ransomwarelive(seen: set) -> list:
         log.error(f"ransomware.live error: {e}")
     return new_items
 
+
+# ─── SORGENTE 3: ransomlook.io (RSS) ─────────────────────────────────────────
+
+def fetch_ransomlook_rss(seen: set) -> list:
+    new_items = []
+    try:
+        import xml.etree.ElementTree as ET
+        r = requests.get("https://www.ransomlook.io/rss.xml",
+                         headers=HEADERS, timeout=TIMEOUT)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        for item in root.findall(".//item"):
+            title = item.findtext("title", "")
+            desc  = item.findtext("description", "")
+            full  = f"{title} {desc}"
+            # Filtro CONSERVATIVO: solo indicatori certi di italianità
+            if not ITALY_STRICT_RE.search(full):
+                continue
+            link  = item.findtext("link", "https://www.ransomlook.io/recent")
+            date  = item.findtext("pubDate", "N/A")[:16]
+            uid   = hashlib.md5(link.encode()).hexdigest()
+            vid   = make_id("ransomlook_rss", uid)
+            if vid in seen:
+                continue
+            # Estrai gruppo dalla descrizione (es. "lockbit3")
+            group_m = re.search(r"group[:\s]+([\w\s-]+)", desc, re.IGNORECASE)
+            group   = group_m.group(1).strip()[:30] if group_m else "N/A"
+            seen.add(vid)
+            new_items.append(format_alert("ransomlook.io", title[:80], group, date, url=link))
+        log.info(f"ransomlook.io RSS: {len(new_items)} nuovi")
+    except Exception as e:
+        log.error(f"ransomlook.io RSS error: {e}")
+    return new_items
+
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -225,6 +272,7 @@ def main():
 
     all_new += fetch_ecrime_bsky(seen)
     all_new += fetch_ransomwarelive(seen)
+    all_new += fetch_ransomlook_rss(seen)
 
     save_seen(seen)
 
