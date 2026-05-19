@@ -208,46 +208,34 @@ def fetch_ransomdb(seen: set) -> list:
         log.error(f"ransom-db error: {e}")
     return new_items
 
-# ─── SORGENTE 3: ransomlook.io ───────────────────────────────────────────────
+# ─── SORGENTE 3: ransomware.live (API Italia) ────────────────────────────────
 
-def fetch_ransomlook(seen: set) -> list:
+def fetch_ransomwarelive(seen: set) -> list:
     new_items = []
     try:
-        url  = "https://www.ransomlook.io/recent"
-        r    = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        # Endpoint recenti vittime, filtriamo per country IT/ITA/Italy
+        url = "https://api.ransomware.live/v2/recentvictims"
+        r   = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
         r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-        # Struttura tabella ransomlook: Date | Title (victim) | Group
-        for row in soup.select("table tbody tr"):
-            cells = row.find_all("td")
-            if len(cells) < 3:
+        victims = r.json() if isinstance(r.json(), list) else r.json().get("victims", [])
+        for item in victims:
+            country = item.get("country", "").lower().strip()
+            if country not in ("it", "ita", "italy", "italia"):
                 continue
-            date   = cells[0].get_text(strip=True)
-            victim = cells[1].get_text(strip=True)
-            group  = cells[2].get_text(strip=True)
-            # Filtro Italia sul nome vittima + testo completo riga
-            full_text = f"{victim} {date} {group}"
-            if not ITALY_RE.search(full_text):
-                continue
-            # Escludi falsi positivi: vittima deve contenere keyword italiana
-            # (evita match su date o nomi gruppo)
-            if not ITALY_RE.search(victim):
-                continue
-            uid  = hashlib.md5(f"{date}{victim}".encode()).hexdigest()
-            vid  = make_id("ransomlook", uid)
+            uid = str(item.get("id", item.get("post_id",
+                      hashlib.md5(str(item).encode()).hexdigest())))
+            vid = make_id("ransomwarelive", uid)
             if vid in seen:
                 continue
-            # Link al gruppo
-            link_tag = cells[2].find("a", href=True)
-            link     = ("https://www.ransomlook.io" + link_tag["href"]
-                        if link_tag and link_tag["href"].startswith("/")
-                        else "https://www.ransomlook.io/recent")
+            victim = item.get("victim", item.get("post_title", "N/A"))
+            group  = item.get("group",  item.get("gang", "N/A"))
+            date   = item.get("published", item.get("date", "N/A"))[:19]
+            link   = item.get("url", "https://www.ransomware.live/")
             seen.add(vid)
-            new_items.append(format_alert("ransomlook.io", victim, group,
-                                          date[:19], url=link))
-        log.info(f"ransomlook.io: {len(new_items)} nuovi")
+            new_items.append(format_alert("ransomware.live", victim, group, date, url=link))
+        log.info(f"ransomware.live: {len(new_items)} nuovi")
     except Exception as e:
-        log.error(f"ransomlook.io error: {e}")
+        log.error(f"ransomware.live error: {e}")
     return new_items
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -267,7 +255,7 @@ def main():
 
     all_new += fetch_ecrime_bsky(seen)
     all_new += fetch_ransomdb(seen)
-    all_new += fetch_ransomlook(seen)
+    all_new += fetch_ransomwarelive(seen)
 
     save_seen(seen)
 
