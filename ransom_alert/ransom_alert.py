@@ -229,7 +229,7 @@ def fetch_ransomwarelive(seen: set) -> list:
                 continue
             victim = item.get("victim", item.get("post_title", "N/A"))
             group  = item.get("group",  item.get("gang", "N/A"))
-            date   = item.get("published", item.get("date", "N/A"))[:19]
+            date   = (item.get("discoverdate") or item.get("discovered") or item.get("published") or item.get("date") or "N/A")[:19]
             link   = item.get("url", "https://www.ransomware.live/")
             seen.add(vid)
             new_items.append(format_alert("ransomware.live", victim, group, date, url=link))
