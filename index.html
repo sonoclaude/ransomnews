@@ -996,7 +996,7 @@ html.light .footer-logo img {
 }
 
 @media (max-width: 768px) {
-  nav, .hero, .toolbar, .tabs, .table-wrapper, footer { padding-left: 16px; padding-right: 16px; }
+  nav, .hero, .toolbar, .tabs, .table-wrapper, footer { text-align: center; font-size: 0.95rem;  padding-left: 16px; padding-right: 16px; }
 
   /* MOBILE: nascondi sezioni, mostra solo rivendicazioni */
   .hero, .trend-section, .heatmap-section, .chart-box,
@@ -2489,7 +2489,6 @@ td:nth-child(7){
   }
 }
 
-/* Pulsante Torna su */
 #btn-back-to-top { position:fixed; bottom:72px; right:24px; z-index:9999; width:44px; height:44px; border-radius:50%; background:var(--red,#e5291e); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s,transform 0.2s; box-shadow:0 4px 16px rgba(0,0,0,0.35); }
 #btn-back-to-top.visible { opacity:1; pointer-events:auto; }
 #btn-back-to-top:hover { transform:translateY(-3px); }
@@ -4823,13 +4822,14 @@ function updateFooterMeta() {
     updateEl.textContent = `Ultimo aggiornamento dati: ${data} - ${ora}`;
   }
   if (verEl) {
-    verEl.textContent = 'DS_STABILE_186';
+    verEl.textContent = 'DS_STABILE_189';
   }
 }
 document.addEventListener('DOMContentLoaded', updateFooterMeta);
 
 // ── Note tooltip: nessun JS necessario, gestito via CSS ──
 </script>
+
 
 <script>
 (function(){
