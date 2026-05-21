@@ -1,7 +1,7 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-05-21T07:47:07.523959+00:00",
-  "total": 168,
+  "generated": "2026-05-21T16:24:23.281335+00:00",
+  "total": 169,
   "gruppi": [
     {
       "nome": "8base",
@@ -1166,6 +1166,12 @@
       "anni_attivi": [
         2021
       ]
+    },
+    {
+      "nome": "spycorporate",
+      "rivendicazioni": 0,
+      "dati_gb": 0.0,
+      "anni_attivi": []
     },
     {
       "nome": "stormous",
