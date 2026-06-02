@@ -1,7 +1,7 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-06-02T06:03:01.993288+00:00",
-  "total": 169,
+  "generated": "2026-06-02T10:20:40.155393+00:00",
+  "total": 170,
   "gruppi": [
     {
       "nome": "8base",
@@ -211,6 +211,12 @@
     },
     {
       "nome": "blackwater",
+      "rivendicazioni": 0,
+      "dati_gb": 0.0,
+      "anni_attivi": []
+    },
+    {
+      "nome": "blackx",
       "rivendicazioni": 0,
       "dati_gb": 0.0,
       "anni_attivi": []
