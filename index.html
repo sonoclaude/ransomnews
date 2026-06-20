@@ -1574,6 +1574,7 @@ html.light .hm-btn { color: #7a82b0; }
   }
 
   #regioneFilter { order: 3; }
+#settoreFilter { order: 3; max-width: 190px; }
   #gruppoFilter { order: 2; }
   #searchInput, .search-wrap { order: 1; }
   #toolbarResetBtn { order: 4; }
@@ -2488,6 +2489,9 @@ td:nth-child(7){
 .rcard-name { font-size:15px; font-weight:600; color:var(--white); line-height:1.35; margin-bottom:4px; }
 .rcard-link { color:#4d9fff; text-decoration:none; font-size:11px; font-family:var(--mono); opacity:.75; }
 .rcard-link:hover { opacity:1; text-decoration:underline; }
+.rcard-settore { display:block; font-size:11px; color:var(--text-muted); font-family:var(--mono); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.rcard-settore .v { color:var(--text-dim); font-size:12px; }
+.rcard-settore .rcard-sym { opacity:.65; margin-right:2px; }
 .rcard-div { border:none; border-top:1px solid var(--border); }
 .rcard-bottom { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .rcard-loc { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
@@ -2530,9 +2534,10 @@ td:nth-child(7){
     order: 3;
   }
   /* Dropdown gruppo e regione: metà larghezza ciascuno */
-  #gruppoFilter, #regioneFilter {
+  #gruppoFilter, #regioneFilter, #settoreFilter {
     flex: 1 !important;
     min-width: 0 !important;
+    max-width: none !important;
     font-size: 12px !important;
     padding: 6px 8px !important;
     order: 4;
@@ -3210,6 +3215,7 @@ td:nth-child(7){
   </div>
   <select id="regioneFilter"><option value="">Tutte le regioni</option></select>
   <select id="gruppoFilter">  <option value="">Tutti i gruppi</option></select>
+  <select id="settoreFilter"><option value="">Tutti i settori</option></select>
   <span class="date-range-wrap"><input type="date" id="dateFrom" title="Data inizio" onchange="onDateChange()"><span class="date-sep">→</span><input type="date" id="dateTo" title="Data fine" onchange="onDateChange()"></span>
   <button id="toolbarResetBtn" onclick="resetToolbar()" style="display:none;font-size:13px;color:var(--blue);background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.35);border-radius:6px;padding:8px 14px;cursor:pointer;letter-spacing:0.04em;white-space:nowrap;" title="Azzera ricerca e filtri tabella" onmouseover="this.style.background='rgba(77,159,255,0.2)'" onmouseout="this.style.background='rgba(77,159,255,0.1)'">✕ reset ricerca</button>
   <div class="view-toggle" style="margin-left:auto;display:none">
@@ -4026,6 +4032,32 @@ let year = 0, sortKey = 'SEQ', sortDir = -1;
 let hmMonth = null, hmGroup = null, hmRegione = null;
 let hmSortAlpha = false;
 
+// ── Catalogo ufficiale ATECO 2025 (22 sezioni, A-V) ──────────
+const ATECO_CATALOG = [
+  { code: "A", label: "Agricoltura, silvicoltura e pesca", short: "Agricoltura" },
+  { code: "B", label: "Attività estrattive", short: "Attività estrattive" },
+  { code: "C", label: "Attività manifatturiere", short: "Manifatturiero" },
+  { code: "D", label: "Fornitura di energia elettrica, gas, vapore e aria condizionata", short: "Energia/Gas" },
+  { code: "E", label: "Fornitura di acqua; reti fognarie, trattamento rifiuti e risanamento", short: "Acqua/Rifiuti" },
+  { code: "F", label: "Costruzioni", short: "Costruzioni" },
+  { code: "G", label: "Commercio all'ingrosso e al dettaglio", short: "Commercio" },
+  { code: "H", label: "Trasporto e magazzinaggio", short: "Trasporti" },
+  { code: "I", label: "Attività dei servizi di alloggio e di ristorazione", short: "Alloggio/Ristorazione" },
+  { code: "J", label: "Attività editoriali, trasmissioni radiofoniche e produzione di contenuti", short: "Editoria/Media" },
+  { code: "K", label: "Telecomunicazioni, programmazione e consulenza informatica", short: "Telecom/IT" },
+  { code: "L", label: "Attività finanziarie e assicurative", short: "Finanza/Assicurazioni" },
+  { code: "M", label: "Attività immobiliari", short: "Immobiliare" },
+  { code: "N", label: "Attività professionali, scientifiche e tecniche", short: "Servizi professionali" },
+  { code: "O", label: "Attività amministrative e di servizi di supporto", short: "Servizi amministrativi" },
+  { code: "P", label: "Amministrazione pubblica e difesa; assicurazione sociale obbligatoria", short: "PA/Difesa" },
+  { code: "Q", label: "Istruzione e formazione", short: "Istruzione" },
+  { code: "R", label: "Attività per la salute umana e di assistenza sociale", short: "Sanità/Assistenza" },
+  { code: "S", label: "Attività artistiche, sportive e di divertimento", short: "Arte/Sport/Svago" },
+  { code: "T", label: "Altre attività di servizi", short: "Altri servizi" },
+  { code: "U", label: "Attività di famiglie/convivenze come datori di lavoro", short: "Famiglie/Conviv." },
+  { code: "V", label: "Attività di organizzazioni e organismi extraterritoriali", short: "Extraterritoriali" }
+];
+
 // Converte data dd/mm/yyyy in oggetto Date per confronti
 function parseRecordDate(str) {
   if (!str) return null;
@@ -4094,6 +4126,14 @@ function populate() {
 
   rSel.value = rv;
   gSel.value = groupCatalog.includes(gv) ? gv : '';
+
+  const sSel = document.getElementById('settoreFilter');
+  if (sSel) {
+    const sv = sSel.value;
+    sSel.innerHTML = '<option value="">Tutti i settori</option>' +
+      ATECO_CATALOG.map(x => `<option value="${x.code}" title="${x.label}">${x.code} — ${x.short}</option>`).join('');
+    sSel.value = sv;
+  }
 }
 
 const NUTS1_MAP = {"Valle d\'Aosta":"Nord-Ovest","Piemonte":"Nord-Ovest","Liguria":"Nord-Ovest","Lombardia":"Nord-Ovest","Trentino Alto Adige":"Nord-Est","Veneto":"Nord-Est","Friuli Venezia Giulia":"Nord-Est","Emilia Romagna":"Nord-Est","Toscana":"Centro","Umbria":"Centro","Marche":"Centro","Lazio":"Centro","Abruzzo":"Sud","Molise":"Sud","Campania":"Sud","Puglia":"Sud","Basilicata":"Sud","Calabria":"Sud","Sicilia":"Isole","Sardegna":"Isole"};
@@ -4145,7 +4185,9 @@ function cardRow(r) {
   const gs = groupStyle(String(r.GRUPPO).toLowerCase());
   return '<div class="rcard">'
     +'<div class="rcard-top"><span class="rcard-id">#'+r.SEQ+'</span><span class="rcard-date">'+r.DATA+'</span>'+nb+'<span class="rcard-gruppo" style="'+gs+'">'+String(r.GRUPPO).toLowerCase()+'</span><button class="rcard-expand-btn" data-ridx="'+r.SEQ+'" title="Espandi" aria-label="Espandi card">⤢</button></div>'
-    +'<div><div class="rcard-name">'+(r.VITTIMA||'')+'</div>'+(r.LINK?'<a class="rcard-link" href="https://'+r.LINK.trim()+'" target="_blank" rel="noopener">'+r.LINK.trim()+'</a>':'')+'</div>'
+    +'<div><div class="rcard-name">'+(r.VITTIMA||'')+'</div>'+(r.LINK?'<a class="rcard-link" href="https://'+r.LINK.trim()+'" target="_blank" rel="noopener">'+r.LINK.trim()+'</a>':'')
+    +'<div class="rcard-settore"><span class="rcard-sym">▣</span><span style="color:var(--text-muted)"> Settore:</span> <span class="v">'+(r.SETTORE||'—')+'</span></div>'
+    +'</div>'
     +'<hr class="rcard-div">'
     +'<div class="rcard-bottom"><div class="rcard-loc">'
     +'<span class="rcard-row"><span class="rcard-sym">◎</span><span style="color:var(--text-muted)"> Provincia:</span> <span class="v">'+(r.PROVINCIA||'—')+'</span></span>'
@@ -4180,6 +4222,8 @@ function render() {
   const q  = document.getElementById('searchInput').value.toLowerCase();
   const re = document.getElementById('regioneFilter').value;
   const gr = document.getElementById('gruppoFilter').value;
+  const seSel = document.getElementById('settoreFilter');
+  const se = seSel ? seSel.value : '';
   const dfEl = document.getElementById('dateFrom');
   const dtEl = document.getElementById('dateTo');
   const dateFrom = dfEl ? parseInputDate(dfEl.value) : null;
@@ -4188,6 +4232,7 @@ function render() {
   filteredRows = base().filter(r => {
     if (re && r.REGIONE !== re) return false;
     if (gr && normalizeGroupName(r.GRUPPO) !== gr) return false;
+    if (se && r.SETTORE !== se) return false;
 
     // I filtri heatmap su gruppo/regione devono valere sempre,
     // sia cliccando sul totale sia cliccando sul singolo mese.
@@ -5080,6 +5125,8 @@ function resetToolbar() {
   document.getElementById('searchInput').value = '';
   document.getElementById('regioneFilter').value = '';
   document.getElementById('gruppoFilter').value = '';
+  const sSel = document.getElementById('settoreFilter');
+  if (sSel) sSel.value = '';
   document.getElementById('dateFrom').value = '';
   document.getElementById('dateTo').value = '';
   document.getElementById('toolbarResetBtn').style.display = 'none';
@@ -5301,7 +5348,7 @@ function updateFooterMeta() {
     updateEl.textContent = `Ultimo aggiornamento dati: ${data} - ${ora}`;
   }
   if (verEl) {
-    verEl.textContent = 'DS_STABILE_247';
+    verEl.textContent = 'TEST_SETTORE_248';
   }
 }
 document.addEventListener('DOMContentLoaded', updateFooterMeta);
