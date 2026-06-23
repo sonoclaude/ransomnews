@@ -1930,6 +1930,12 @@ html.light .hm-btn { color: #7a82b0; }
   gap:20px;
   align-items:stretch;
 }
+.top-grid-wide{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:20px;
+  align-items:stretch;
+}
 .top-section .chart-box{
   min-height:640px;
 }
@@ -3172,8 +3178,8 @@ td:nth-child(7){
         <div class="cbv2-body" id="geoDivisionBox"></div>
       </div>
       <div class="chart-box-v2">
-        <div class="cbv2-title">TOP 5 DATI PUBBLICATI</div>
-        <div class="cbv2-body" id="top5gbchart"></div>
+        <div class="cbv2-title">TOP 5 SETTORI</div>
+        <div class="cbv2-body" id="top5settori"></div>
       </div>
   </div>
 </div>
@@ -3193,6 +3199,20 @@ td:nth-child(7){
     <div class="chart-box-v2">
       <div class="cbv2-title">AREE NUTS 1 </div>
       <div class="cbv2-body" id="cy-geodiv"></div>
+    </div>
+    <div class="chart-box-v2">
+      <div class="cbv2-title">TOP 5 SETTORI </div>
+      <div class="cbv2-body" id="cy-top5settori"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP 5 DATI PUBBLICATI (sezione dedicata, 2 box larghi) -->
+<div class="top-section" style="margin-top:0;">
+  <div class="top-grid-wide">
+    <div class="chart-box-v2">
+      <div class="cbv2-title">TOP 5 DATI PUBBLICATI</div>
+      <div class="cbv2-body" id="top5gbchart"></div>
     </div>
     <div class="chart-box-v2">
       <div class="cbv2-title">TOP 5 DATI PUBBLICATI </div>
@@ -4313,6 +4333,7 @@ function buildCurrentYear() {
     'cy-top5gruppi':  `TOP 5 GRUPPI ${label}`,
     'cy-top5regioni': `TOP 5 REGIONI ${label}`,
     'cy-geodiv':      `AREE NUTS 1 ${label}`,
+    'cy-top5settori': `TOP 5 SETTORI ${label}`,
     'cy-top5gb':      `TOP 5 DATI PUBBLICATI ${label}`,
   };
   Object.entries(titleMap).forEach(([containerId, title]) => {
@@ -4398,6 +4419,22 @@ function buildCurrentYear() {
   const mTot = cyData.filter(r => r.REGIONE && r.REGIONE !== 'Sconosciuta').length || 1;
   makeChart('cy-geodiv', mAll.slice(0,5), mMax, mTot, false);
 
+  // Top 5 Settori anno corrente
+  const sCounts = {};
+  cyData.forEach(r => {
+    const s = (r.SETTORE || '').trim();
+    if (s) sCounts[s] = (sCounts[s] || 0) + 1;
+  });
+  const sSorted = Object.entries(sCounts)
+    .map(([code, n]) => {
+      const found = ATECO_CATALOG.find(x => x.code === code);
+      return [found ? found.short : code, n];
+    })
+    .sort((a,b) => b[1]-a[1]).slice(0,5);
+  const sMax = sSorted.length ? sSorted[0][1] : 1;
+  const sTot = Object.values(sCounts).reduce((a,b) => a+b, 0) || 1; // classificati, non cyData.length
+  makeChart('cy-top5settori', sSorted, sMax, sTot, false);
+
   // Top 5 Dati Pubblicati anno corrente
   const gbCounts = {};
   cyData.forEach(r => {
@@ -4411,6 +4448,56 @@ function buildCurrentYear() {
   makeChart('cy-top5gb', gbSorted, gbMax, gbTot, true);
 }
 
+function buildTop5Settori() {
+  const counts = {};
+  all.forEach(r => {
+    const s = (r.SETTORE || '').trim();
+    if (!s) return; // esclude i non classificati dal conteggio E dal totale
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const max = sorted.length ? sorted[0][1] : 1;
+  const total = Object.values(counts).reduce((a,b) => a+b, 0) || 1; // classificati, non 'all.length'
+
+  const palette = [
+    { fg: '#ff0000', bg: 'linear-gradient(90deg, rgba(255,0,0,0.85), rgba(255,0,0,0.25))'  },
+    { fg: '#f0b429', bg: 'linear-gradient(90deg, rgba(240,180,41,0.85), rgba(240,180,41,0.25))' },
+    { fg: '#4d9fff', bg: 'linear-gradient(90deg, rgba(77,159,255,0.85), rgba(77,159,255,0.25))' },
+    { fg: '#00c896', bg: 'linear-gradient(90deg, rgba(0,200,150,0.85), rgba(0,200,150,0.25))' },
+    { fg: '#c97aff', bg: 'linear-gradient(90deg, rgba(201,122,255,0.85), rgba(201,122,255,0.25))' },
+  ];
+
+  const html = sorted.map(([code, n], i) => {
+    const widthPct = Math.max(8, Math.round((n / max) * 100));
+    const { fg, bg } = palette[i];
+    const found = ATECO_CATALOG.find(x => x.code === code);
+    const label = found ? found.short : code;
+    return `<div class="topv2-item">
+      <div class="topv2-head">
+        <div class="topv2-name" title="${label}" style="color:${fg}">${label}</div>
+        <div class="topv2-count" style="color:${fg}">${n}</div>
+      </div>
+      <div class="topv2-track">
+        <div class="topv2-fill" style="width:${widthPct}%; background:${bg}; border-left:3px solid ${fg}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const legend = `<div class="geo-bottom-legend" style="margin:14px auto 0;width:100%;padding:4px 0;border:none;background:transparent;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap;">` +
+    sorted.map(([, n], i) => {
+      const pct = ((n / total) * 100).toFixed(1);
+      const { fg } = palette[i];
+      return `<span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-family:var(--mono);font-size:10px;color:var(--text-dim);">
+        <span style="width:11px;height:11px;border-radius:2px;background:${fg};display:inline-block;flex:0 0 11px;"></span>
+        <span style="font-weight:700;letter-spacing:0.03em;">${pct}%</span>
+      </span>`;
+    }).join('') + `</div>`;
+
+  const el = document.getElementById('top5settori');
+  if (el) el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">${html}</div>` + legend;
+}
+buildTop5Settori();
+
 function recomputeDashboard() {
   all = YEARS.slice().sort((a,b) => a-b).flatMap(y => DATASETS[y]);
   all.forEach((r,i) => { r.SEQ = String(i+1).padStart(5,'0'); });
@@ -4421,6 +4508,7 @@ function recomputeDashboard() {
   buildTop5();
   buildTop5Regioni();
   buildTop5GB();
+  buildTop5Settori();
   buildGeoDivision();
   buildCurrentYear();
   buildHeatmap();
@@ -5069,7 +5157,7 @@ function updateFooterMeta() {
     updateEl.textContent = `Ultimo aggiornamento dati: ${data} - ${ora}`;
   }
   if (verEl) {
-    verEl.textContent = 'DS_STABILE_318';
+    verEl.textContent = 'TEST_TOPSETTORI_320';
   }
 }
 document.addEventListener('DOMContentLoaded', updateFooterMeta);
