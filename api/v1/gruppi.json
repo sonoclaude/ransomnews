@@ -1,7 +1,7 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-06-27T13:57:08.652129+00:00",
-  "total": 173,
+  "generated": "2026-06-28T08:08:48.485875+00:00",
+  "total": 174,
   "gruppi": [
     {
       "nome": "8base",
@@ -1307,6 +1307,12 @@
         2022,
         2023
       ]
+    },
+    {
+      "nome": "wallstreet",
+      "rivendicazioni": 0,
+      "dati_gb": 0.0,
+      "anni_attivi": []
     },
     {
       "nome": "walocker",
