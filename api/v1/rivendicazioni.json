@@ -1,7 +1,7 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-07-23T11:50:18.497812+00:00",
-  "total": 802,
+  "generated": "2026-07-27T15:24:53.594335+00:00",
+  "total": 803,
   "records": [
     {
       "id": "00001",
@@ -9624,6 +9624,18 @@
       "link": "autoroyalcompany.it",
       "provincia": "Roma",
       "regione": "Lazio",
+      "dati_gb": 0.0,
+      "note": ""
+    },
+    {
+      "id": "00479",
+      "data": "25/07/2026",
+      "anno": 2026,
+      "vittima": "Sistnet Sistemi 3 S.R.L.",
+      "gruppo": "nova",
+      "link": "sistnet.it",
+      "provincia": "Cuneo",
+      "regione": "Piemonte",
       "dati_gb": 0.0,
       "note": ""
     }
