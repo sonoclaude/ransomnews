@@ -1,7 +1,7 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-08-08T13:43:32.079022+00:00",
-  "total": 123,
+  "generated": "2026-08-09T04:05:30.705866+00:00",
+  "total": 124,
   "gruppi": [
     {
       "nome": "8base",
@@ -495,6 +495,14 @@
       "dati_gb": 0.0,
       "anni_attivi": [
         2025
+      ]
+    },
+    {
+      "nome": "krybit",
+      "rivendicazioni": 1,
+      "dati_gb": 0.0,
+      "anni_attivi": [
+        2026
       ]
     },
     {
