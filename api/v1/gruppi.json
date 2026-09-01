@@ -1,6 +1,6 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-09-01T08:09:41.532778+00:00",
+  "generated": "2026-09-01T08:20:20.301068+00:00",
   "total": 128,
   "gruppi": [
     {
@@ -381,7 +381,7 @@
     },
     {
       "nome": "everest",
-      "rivendicazioni": 18,
+      "rivendicazioni": 17,
       "dati_gb": 1044.33,
       "anni_attivi": [
         2021,
