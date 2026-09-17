@@ -1,7 +1,7 @@
 {
   "source": "ransomnews.online",
-  "generated": "2026-09-17T05:27:03.373469+00:00",
-  "total": 131,
+  "generated": "2026-09-17T09:00:16.070316+00:00",
+  "total": 132,
   "gruppi": [
     {
       "nome": "8base",
@@ -1067,6 +1067,14 @@
     },
     {
       "nome": "vect",
+      "rivendicazioni": 1,
+      "dati_gb": 0.0,
+      "anni_attivi": [
+        2026
+      ]
+    },
+    {
+      "nome": "vexy",
       "rivendicazioni": 1,
       "dati_gb": 0.0,
       "anni_attivi": [
